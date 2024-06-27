@@ -1,9 +1,11 @@
+from __future__ import annotations
 from ..draw_functions import draw
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import numpy as np
 from ..defaults import default_variable
 from dnora.dnora_type_manager.dnora_types import DnoraDataType
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from dnora.modelrun import ModelRun

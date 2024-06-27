@@ -1,3 +1,4 @@
+from __future__ import annotations
 import matplotlib.pyplot as plt
 from cartopy import crs as ccrs
 from ..plot_functions import dnora_functions

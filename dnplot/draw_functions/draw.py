@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np
 from ..defaults import default_markers
 import matplotlib.tri as mtri
