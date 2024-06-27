@@ -5,8 +5,11 @@ import numpy as np
 from ..defaults import default_variable
 from dnora.dnora_type_manager.dnora_types import DnoraDataType
 
+if TYPE_CHECKING:
+    from dnora.modelrun import ModelRun
 
-def grid_plotter(fig_dict, model) -> dict:
+
+def grid_plotter(fig_dict: dict, model: ModelRun) -> dict:
     """Plot the depth information and set output points etc."""
     grid = model.grid()
     fig_dict = draw.draw_gridded_magnitude(
@@ -38,7 +41,7 @@ def grid_plotter(fig_dict, model) -> dict:
     return fig_dict
 
 
-def wind_plotter(fig_dict, model) -> dict:
+def wind_plotter(fig_dict: dict, model: ModelRun) -> dict:
     def update_plot(val):
         nonlocal fig_dict
         nonlocal figure_initialized
@@ -86,7 +89,7 @@ def wind_plotter(fig_dict, model) -> dict:
     return fig_dict
 
 
-def spectra_plotter(fig_dict, model) -> dict:
+def spectra_plotter(fig_dict: dict, model: ModelRun) -> dict:
     def update_plot(val):
         nonlocal fig_dict
         nonlocal figure_initialized

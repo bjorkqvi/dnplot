@@ -3,9 +3,22 @@ from ..defaults import default_markers
 import matplotlib.tri as mtri
 from cartopy import feature as cfeature
 
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dnora.grid import Grid
+    from dnora.modelrun import ModelRun
+
 
 def draw_gridded_magnitude(
-    fig_dict, x, y, data, cmap, vmax=None, vmin=None, label: str = "__nolegend__"
+    fig_dict: dict,
+    x: np.ndarray,
+    y: np.ndarray,
+    data: np.ndarray,
+    cmap,
+    vmax: Optional[float] = None,
+    vmin: Optional[float] = None,
+    label: str = "__nolegend__",
 ):
     """
     Takes lon and lat positions, and data points. Plots countourplot on given ax.
@@ -39,8 +52,8 @@ def draw_gridded_magnitude(
 
 
 def draw_masked_points(
-    fig_dict,
-    grid,
+    fig_dict: dict,
+    grid: Grid,
     masks_to_plot: list[str],
     default_dict: dict = default_markers.get("generic_masks"),
 ):
@@ -62,8 +75,8 @@ def draw_masked_points(
 
 
 def draw_object_points(
-    fig_dict,
-    model,
+    fig_dict: dict,
+    model: ModelRun,
     objects_to_plot: list[str],
     default_dict: dict = default_markers.get("generic_objects"),
 ):
@@ -85,7 +98,9 @@ def draw_object_points(
     return fig_dict
 
 
-def draw_mask(fig_dict, x_vec, y_vec, mask) -> dict:
+def draw_mask(
+    fig_dict: dict, x_vec: np.ndarray, y_vec: np.ndarray, mask: np.ndarray
+) -> dict:
     xx, yy = np.meshgrid(x_vec, y_vec)
     mask = mask.astype(float)
 
@@ -96,7 +111,15 @@ def draw_mask(fig_dict, x_vec, y_vec, mask) -> dict:
     return fig_dict
 
 
-def draw_arrows(fig_dict, lon, lat, xdata, ydata, scale=100, reduce_arrows: int = None):
+def draw_arrows(
+    fig_dict: dict,
+    lon: np.ndarray,
+    lat: np.ndarray,
+    xdata: np.ndarray,
+    ydata: np.ndarray,
+    scale: float = 100.0,
+    reduce_arrows: Optional[int] = None,
+):
     """
 
     Parameters
