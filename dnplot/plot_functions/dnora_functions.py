@@ -103,19 +103,18 @@ def spectra_plotter(fig_dict: dict, model: ModelRun) -> dict:
         )
 
         fig_dict["ax"].set_title(
-            f"{wind.time(datetime=False)[sliders['time'].val]} {wind.name}"
+            f"{spectra.time(datetime=False)[sliders['time'].val]} {spectra.name}"
         )
         figure_initialized = True
 
-    wind = model.wind()
     spectra = model.spectra()
     grid = model.grid()
     figure_initialized = False
     sliders = {}
-    if len(wind.time()) > 1:
+    if len(spectra.time()) > 1:
         ax_slider = plt.axes([0.17, 0.05, 0.65, 0.03])
         sliders["time"] = Slider(
-            ax_slider, "time_index", 0, len(wind.time()) - 1, valinit=0, valstep=1
+            ax_slider, "time_index", 0, len(spectra.time()) - 1, valinit=0, valstep=1
         )
         sliders["time"].on_changed(update_plot)
     if len(spectra.inds()) > 1:
