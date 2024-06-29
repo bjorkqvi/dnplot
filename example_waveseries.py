@@ -7,4 +7,4 @@ model.spectra_to_waveseries()
 model.waveseries()
 
 plot = dnplot.Dnora(model)
-plot.waveseries(var=[('hs', 'tm01'),('hs', 'tm01'),('hs', 'tm01')])
+plot.waveseries(var=[('hs', 'tm01'),('hs', 'tm01'),('hs', 'dirm'),'hs'])
