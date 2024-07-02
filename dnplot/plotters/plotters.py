@@ -38,3 +38,9 @@ class Dnora:
         fig_dict = {"fig": fig, "ax": ax}
         fig_dict = plotter(fig_dict, self.model)
         fig_dict.get("fig").show()
+
+    def waveseries(self, var, plotter: Callable = dnora_functions.waveseries_plotter):
+        #fig, ax = plt.subplots(1)
+        fig_dict = { "var": var}
+        fig_dict = plotter(fig_dict, self.model)
+        #fig_dict.get("fig").show()  

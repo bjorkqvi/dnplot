@@ -131,3 +131,63 @@ def spectra_plotter(fig_dict: dict, model: ModelRun) -> dict:
     plt.show(block=True)
 
     return fig_dict
+
+def waveseries_plotter(fig_dict: dict, model: ModelRun):
+    var = fig_dict['var']
+    ts = model.waveseries()
+    if len(var) < 4:
+        fig, axes = plt.subplots(len(var), 1)
+        fig.suptitle(ts.name,fontsize=16)
+        axes = axes if len(var) > 1 else [axes] 
+        for i, item in enumerate(var):
+            if isinstance(item, tuple):
+                var1, var2 = item
+                ax=axes[i]
+                ax.plot(ts.get('time'),ts.get(var1),color='b',label=f"{var1} ({ts.meta.get(var1)['unit']})")
+                
+                ax.set_ylabel(f"{ts.meta.get(var1)['long_name']}\n ({ts.meta.get(var1)['unit']})",color='b')
+                ax.set_xlabel('UTC',fontsize=12)
+                ax2=ax.twinx()
+                ax2.plot(ts.get('time'),ts.get(var2),color='g',label=f"{var2} ({ts.meta.get(var2)['unit']})")
+                ax2.set_ylabel(f"{ts.meta.get(var2)['long_name']}\n ({ts.meta.get(var2)['unit']})",color='g')
+                lines1, labels1 = ax.get_legend_handles_labels()
+                lines2, labels2 = ax2.get_legend_handles_labels()
+                ax2.legend(lines1 + lines2, labels1 + labels2)
+                ax.grid(True)
+            
+            else:
+                axes[i].plot(ts.get('time'),ts.get(item),color='b',label=f"{item} ({ts.meta.get(item)['unit']})")
+                axes[i].set_ylabel(f"{ts.meta.get(item)['long_name']} \n ({ts.meta.get(item)['unit']})")
+                axes[i].set_xlabel('UTC',fontsize=12)
+                axes[i].legend()
+                axes[i].grid(True)
+        plt.tight_layout()
+        plt.show()
+
+    else:
+        for item in var:
+            fig, ax = plt.subplots()
+            if isinstance(item, tuple):
+                var1, var2 = item
+                ax.plot(ts.get('time'),ts.get(var1),color='b',label=f"{var1} ({ts.meta.get(var1)['unit']})")
+
+                ax.set_ylabel(f"{ts.meta.get(var1)['long_name']}\n ({ts.meta.get(var1)['unit']})",color='b')
+                ax.set_xlabel('UTC',fontsize=12)
+                ax2=ax.twinx()
+                ax2.plot(ts.get('time'),ts.get(var2),color='g',label=f"{var2} ({ts.meta.get(var2)['unit']})")
+                ax2.set_ylabel(f"{ts.meta.get(var2)['long_name']}\n ({ts.meta.get(var2)['unit']})",color='g')
+                lines1, labels1 = ax.get_legend_handles_labels()
+                lines2, labels2 = ax2.get_legend_handles_labels()
+                ax2.legend(lines1 + lines2, labels1 + labels2)
+                ax.grid(True)
+            else:
+                ax.plot(ts.get('time'),ts.get(item),color='b',label=f"{item} ({ts.meta.get(item)['unit']})")
+                ax.set_xlabel('UTC',fontsize=12)
+                ax.set_ylabel(f"{ts.meta.get(item)['long_name']} \n ({ts.meta.get(item)['unit']})")
+                ax.legend()
+                ax.grid(True)
+            ax.set_title(ts.name,fontsize=16)
+        
+        plt.tight_layout()
+        plt.show()
+
