@@ -207,7 +207,6 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
         upper_limit=((max_y/5+1)*5)
         fig_dict['ax'].set_ylim(0,upper_limit)
         fig_dict['ax'].set_yticks(np.arange(0, upper_limit, 5))
-        fig_dict['ax'].set_ylim(0,upper_limit)
         fig_dict['ax'].set_title(spectra1d.name, fontsize=16)
         fig_dict['ax'].set_ylabel(f"{'Wave spectrum'}\n {'E(f)'}")
         fig_dict['ax'].set_xlabel('Frequency')                    
