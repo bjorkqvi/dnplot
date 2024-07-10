@@ -191,3 +191,43 @@ def waveseries_plotter(fig_dict: dict, model: ModelRun):
         plt.tight_layout()
         plt.show()
 
+
+def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
+    def update_plot(val):
+        nonlocal fig_dict
+        nonlocal figure_initialized
+        fig_dict['ax'].cla()
+        fig_dict = draw.draw_graph_spectra1d(
+            fig_dict,
+            spectra1d.spec()[sliders["time"].val, sliders["inds"].val, :],
+            spectra1d.freq(),
+        )
+        figure_initialized = True
+        max_y=np.max(spectra1d.spec())
+        upper_limit=((max_y/5+1)*5)
+        fig_dict['ax'].set_ylim(0,upper_limit)
+        fig_dict['ax'].set_yticks(np.arange(0, upper_limit, 5))
+        fig_dict['ax'].set_title(spectra1d.name, fontsize=16)
+        fig_dict['ax'].set_ylabel(f"{'Wave spectrum'}\n {'E(f)'}")
+        fig_dict['ax'].set_xlabel('Frequency')                    
+        fig_dict['ax'].grid()
+
+    spectra1d = model.spectra1d()
+    grid = model.grid()
+    figure_initialized = False
+    sliders={}
+    if len(spectra1d.time()) > 1:
+        ax_slider = plt.axes([0.17, 0.05, 0.65, 0.03])
+        sliders["time"] = Slider(
+            ax_slider, "time_index", 0, len(spectra1d.time()) - 1, valinit=0, valstep=1
+        )
+        sliders["time"].on_changed(update_plot)
+    if len(spectra1d.inds()) > 1:
+        ax_slider2 = plt.axes([0.17, 0.01, 0.65, 0.03])
+        sliders["inds"] = Slider(
+            ax_slider2, "inds_index", 0, len(spectra1d.x()) - 1, valinit=0, valstep=1
+        )
+        sliders["inds"].on_changed(update_plot)
+    update_plot(0)
+    plt.show(block=True)
+    return fig_dict

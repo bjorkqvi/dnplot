@@ -44,3 +44,10 @@ class Dnora:
         fig_dict = { "var": var}
         fig_dict = plotter(fig_dict, self.model)
         #fig_dict.get("fig").show()  
+
+    def spectra1d(self, plotter: Callable = dnora_functions.spectra1d_plotter):
+        fig, ax = plt.subplots()
+        fig_dict = {"fig": fig, "ax": ax}
+        fig_dict = plotter(fig_dict, self.model)
+        fig_dict.get("fig").show()
+

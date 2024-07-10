@@ -213,3 +213,9 @@ def draw_polar_spectra(fig_dict, spec, freq, dirs) -> dict:
     #     fig_dict['cbar'] = cbar
     #     fig_dict['cax'] = cax
     return fig_dict
+
+def draw_graph_spectra1d(fig_dict, spec, freq) -> dict:
+    fig = fig_dict.get("fig")
+    ax = fig_dict.get("ax")
+    ax.plot(freq,spec)
+    return fig_dict
