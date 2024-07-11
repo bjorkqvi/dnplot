@@ -47,7 +47,8 @@ class Dnora:
 
     def spectra1d(self, plotter: Callable = dnora_functions.spectra1d_plotter):
         fig, ax = plt.subplots()
-        fig_dict = {"fig": fig, "ax": ax}
+        fig, ax2= fig, ax.twinx()
+        fig_dict = {"fig": fig, "ax": ax, "ax2":ax2}
         fig_dict = plotter(fig_dict, self.model)
         fig_dict.get("fig").show()
 

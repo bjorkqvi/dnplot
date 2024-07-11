@@ -214,8 +214,14 @@ def draw_polar_spectra(fig_dict, spec, freq, dirs) -> dict:
     #     fig_dict['cax'] = cax
     return fig_dict
 
-def draw_graph_spectra1d(fig_dict, spec, freq) -> dict:
+def draw_graph_spectra1d(fig_dict, spec, freq, dirm, spr) -> dict:
     fig = fig_dict.get("fig")
     ax = fig_dict.get("ax")
-    ax.plot(freq,spec)
+    ax2 = fig_dict.get('ax2')
+    ax.plot(freq, spec, color='navy')
+    if dirm is not None:
+        ax2.plot(freq,dirm,color='g')
+        if spr is not None:
+            ax2.plot(freq, dirm-spr, color='darkred', ls='dashed')
+            ax2.plot(freq, dirm+spr, color='darkred', ls='dashed')
     return fig_dict
