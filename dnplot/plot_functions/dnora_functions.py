@@ -205,11 +205,11 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
         if hasattr(spectra1d,'dirm'):
             dirm=spectra1d.dirm()[sliders["time"].val, sliders["inds"].val, :]
         else:
-            print('dirm is None')
+            print('Mean direction value is None')
         if hasattr(spectra1d,'spr'):
             spr=spectra1d.spr()[sliders["time"].val, sliders["inds"].val, :]
         else:
-            print('spr is None')
+            print('Spreading value is None')
         fig_dict = draw.draw_graph_spectra1d(
             fig_dict,
             spectra1d.spec()[sliders["time"].val, sliders["inds"].val, :],
@@ -227,7 +227,7 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
         max_y1=np.max(spectra1d.dirm())
         upper_limit = ((max_y1 // 5 + 1) * 5)
         ax2.set_ylim(0, upper_limit)
-        ax2.set_ylabel('Mean dir',color='g')
+        ax2.set_ylabel('Mean direction',color='g')
         ax2.yaxis.set_label_position('right')
         ax2.yaxis.tick_right()
         ax.grid()
