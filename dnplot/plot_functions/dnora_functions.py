@@ -202,14 +202,11 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
         ax2.cla()
         dirm=None
         spr=None
-        if hasattr(spectra1d,'dirm'):
+        if spectra1d.dirm() is not None:
             dirm=spectra1d.dirm()[sliders["time"].val, sliders["inds"].val, :]
-        else:
-            print('Mean direction value is None')
-        if hasattr(spectra1d,'spr'):
+        if spectra1d.spr() is not None:
             spr=spectra1d.spr()[sliders["time"].val, sliders["inds"].val, :]
-        else:
-            print('Spreading value is None')
+            
         fig_dict = draw.draw_graph_spectra1d(
             fig_dict,
             spectra1d.spec()[sliders["time"].val, sliders["inds"].val, :],
