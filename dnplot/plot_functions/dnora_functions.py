@@ -220,13 +220,16 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
         ax.set_yticks(np.arange(0, upper_limit, 5))
         ax.set_title(spectra1d.name, fontsize=16)
         ax.set_xlabel('Frequency')
-        ax.set_ylabel('Wave spectrum\nE(f)', color='b')
+        ax.set_ylabel(f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}", color='b')
         max_y1=np.max(spectra1d.dirm())
         upper_limit = ((max_y1 // 5 + 1) * 5)
         ax2.set_ylim(0, upper_limit)
-        ax2.set_ylabel('Mean direction',color='g')
+        ax2.set_ylabel(f"{spectra1d.meta.get('dirm').get('long_name')}\n {spectra1d.meta.get('dirm').get('unit')}",color='g')
         ax2.yaxis.set_label_position('right')
         ax2.yaxis.tick_right()
+        lines1, labels1 = ax.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax2.legend(lines1+lines2,labels1+labels2)
         ax.grid()
         figure_initialized = True
 
