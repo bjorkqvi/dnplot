@@ -13,7 +13,6 @@ model = dn.modelrun.NORA3(grid, year=2022, month=2, day=1)
 #model.import_wind()
 model.import_spectra()
 model.spectra_to_1d()
-#model.import_waveseries()
 
 plot = dnplot.Dnora(model)
 plot.spectra1d()

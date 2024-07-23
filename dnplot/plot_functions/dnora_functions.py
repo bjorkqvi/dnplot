@@ -196,26 +196,44 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
     def update_plot(val):
         nonlocal fig_dict
         nonlocal figure_initialized
-        fig_dict['ax'].cla()
+        ax=fig_dict['ax']
+        ax2=fig_dict['ax2']
+        ax.cla()
+        ax2.cla()
+        dirm=None
+        spr=None
+        if spectra1d.dirm() is not None:
+            dirm=spectra1d.dirm()[sliders["time"].val, sliders["inds"].val, :]
+        if spectra1d.spr() is not None:
+            spr=spectra1d.spr()[sliders["time"].val, sliders["inds"].val, :]
+            
         fig_dict = draw.draw_graph_spectra1d(
             fig_dict,
             spectra1d.spec()[sliders["time"].val, sliders["inds"].val, :],
             spectra1d.freq(),
+            dirm,
+            spr,
         )
+        max_y = np.max(spectra1d.spec())
+        upper_limit = ((max_y // 5 + 1) * 5)
+        ax.set_ylim(0, upper_limit)
+        ax.set_yticks(np.arange(0, upper_limit, 5))
+        ax.set_title(spectra1d.name, fontsize=16)
+        ax.set_xlabel('Frequency')
+        ax.set_ylabel(f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}", color='b')
+        max_y1=np.max(spectra1d.dirm())
+        upper_limit = ((max_y1 // 5 + 1) * 5)
+        ax2.set_ylim(0, upper_limit)
+        ax2.set_ylabel(f"{spectra1d.meta.get('dirm').get('long_name')}\n {spectra1d.meta.get('dirm').get('unit')}",color='g')
+        ax2.yaxis.set_label_position('right')
+        ax2.yaxis.tick_right()
+        ax.grid()
         figure_initialized = True
-        max_y=np.max(spectra1d.spec())
-        upper_limit=((max_y/5+1)*5)
-        fig_dict['ax'].set_ylim(0,upper_limit)
-        fig_dict['ax'].set_yticks(np.arange(0, upper_limit, 5))
-        fig_dict['ax'].set_title(spectra1d.name, fontsize=16)
-        fig_dict['ax'].set_ylabel(f"{'Wave spectrum'}\n {'E(f)'}")
-        fig_dict['ax'].set_xlabel('Frequency')                    
-        fig_dict['ax'].grid()
 
     spectra1d = model.spectra1d()
     grid = model.grid()
     figure_initialized = False
-    sliders={}
+    sliders = {}
     if len(spectra1d.time()) > 1:
         ax_slider = plt.axes([0.17, 0.05, 0.65, 0.03])
         sliders["time"] = Slider(
