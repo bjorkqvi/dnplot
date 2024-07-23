@@ -218,7 +218,7 @@ def draw_graph_spectra1d(fig_dict, spec, freq, dirm, spr) -> dict:
     fig = fig_dict.get("fig")
     ax = fig_dict.get("ax")
     ax2 = fig_dict.get('ax2')
-    ax.plot(freq, spec, color='blue', label='Spec (m**2*s)', linewidth=2.5)
+    ax.plot(freq, spec, color='blue', label='Spec ($m^2s$)', linewidth=2.5)
     if dirm is not None:
         ax2.plot(freq,dirm,color='g', label='dirm (deg)' )
         if spr is not None:

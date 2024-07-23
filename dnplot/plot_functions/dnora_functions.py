@@ -227,9 +227,6 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
         ax2.set_ylabel(f"{spectra1d.meta.get('dirm').get('long_name')}\n {spectra1d.meta.get('dirm').get('unit')}",color='g')
         ax2.yaxis.set_label_position('right')
         ax2.yaxis.tick_right()
-        lines1, labels1 = ax.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        ax2.legend(lines1+lines2,labels1+labels2)
         ax.grid()
         figure_initialized = True
 
