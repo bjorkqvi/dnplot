@@ -249,3 +249,15 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
     update_plot(0)
     plt.show(block=True)
     return fig_dict
+
+def scatter_plotter(fig_dict: dict,model: ModelRun, var):
+        ts=model.waveseries()
+        x=var[0]
+        y=var[1]
+        title=rf"$\bf{{{ts.name}}}$" + "\n" + rf"{x} vs {y}"
+        fig_dict['ax'].set_title(title,fontsize=14)
+        fig_dict['ax'].scatter(ts.get(x),ts.get(y),c='blue', alpha=0.6, edgecolors='w', s=100)
+        fig_dict['ax'].set_xlabel(f"{ts.meta.get(x)['long_name']}\n ({ts.meta.get(x)['unit']})")
+        fig_dict['ax'].set_ylabel(f"{ts.meta.get(y)['long_name']}\n ({ts.meta.get(y)['unit']})")
+        fig_dict['ax'].grid(linestyle='--')
+        plt.show(block=True)
