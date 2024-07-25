@@ -14,5 +14,6 @@ model = dn.modelrun.NORA3(grid, year=2022, month=2, day=1)
 model.import_spectra()
 model.spectra_to_1d()
 
-plot = dnplot.Dnora(model)
+#plot = dnplot.Dnora(model)
+plot = dnplot.Plotly(model)
 plot.spectra1d()

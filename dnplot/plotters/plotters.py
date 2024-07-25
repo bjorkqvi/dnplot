@@ -59,3 +59,6 @@ class Plotly:
 
     def waveseries(self, plotter: Callable =plotly_functions.waveseries_plotter):
         fig_dict = plotter(self.model)
+
+    def spectra1d(self,plotter: Callable =plotly_functions.spectra1d_plotter):
+        fig_dict = plotter(self.model)

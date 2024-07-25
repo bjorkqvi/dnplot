@@ -79,3 +79,71 @@ def waveseries_plotter(model: ModelRun):
         return subfig
 
     app.run_server("0.0.0.0", 8000, debug=True)
+
+def spectra1d_plotter(model: ModelRun):
+    spectra1d = model.spectra1d()
+    
+    time = {
+        'time': spectra1d.time(),
+    }
+    inds = {
+        'inds': spectra1d.inds(),
+    }
+    
+    time_df = pd.DataFrame(time)
+    time_df['time'] = pd.to_datetime(time_df['time'])
+    time_df['hour'] = time_df['time'].dt.hour
+    
+    inds_df = pd.DataFrame(inds)
+    
+    app = Dash(__name__)
+    
+    app.layout = html.Div([
+        html.H1(spectra1d.name, style={'textAlign': 'center'}),
+        
+        html.Label("time_index"),
+        dcc.Slider(
+            min=time_df['hour'].min(),
+            max=time_df['hour'].max(),
+            step=1,
+            value=time_df['hour'].min(),
+            tooltip={"placement": "bottom", "always_visible": True},
+            updatemode='drag',
+            persistence=True,
+            persistence_type='session',
+            id='time_slider',
+        ),
+        
+        html.Label("inds_index"),
+        dcc.Slider(
+            min=inds_df['inds'].min(),
+            max=inds_df['inds'].max(),
+            step=1,
+            value=inds_df['inds'].min(),
+            tooltip={"placement": "bottom", "always_visible": True},
+            updatemode='drag',
+            persistence=True,
+            persistence_type='session',
+            id='inds_slider',
+        ),
+        
+        dcc.Graph(id="spectra1d_graph"),
+    ])
+    
+    @app.callback(
+        Output("spectra1d_graph", "figure"), 
+        Input("time_slider", "value"),
+        Input("inds_slider", "value"),
+    )
+    def display_spectra1d(time_r, inds_r):
+        selected_time_df = time_df[time_df["hour"] == time_r]
+        spectrum = spectra1d.spec()[selected_time_df.index[0], inds_r, :]
+        freqs = spectra1d.freq()
+        
+        fig = px.line(x=freqs, y=spectrum, labels={'x': 'Frequency', 'y': 'Wavespectrum'})
+        fig.update_layout(
+            yaxis_range=[0, 75],
+        )
+        return fig
+    
+    app.run_server("0.0.0.0", 8000, debug=True)
