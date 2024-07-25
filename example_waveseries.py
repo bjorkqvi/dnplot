@@ -6,6 +6,6 @@ model.import_spectra()
 model.spectra_to_waveseries()
 model.waveseries()
 
-plot = dnplot.Dnora(model)
-plot.waveseries(var=[('hs', 'tm01'),('hs', 'tm01'),('hs', 'dirm'),'hs'])
-#End of program
+#plot = dnplot.Dnora(model)
+plot = dnplot.Plotly(model)
+plot.waveseries()

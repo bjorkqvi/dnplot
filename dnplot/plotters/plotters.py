@@ -2,6 +2,7 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 from cartopy import crs as ccrs
 from ..plot_functions import dnora_functions
+from ..plot_functions import plotly_functions
 from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
@@ -52,3 +53,9 @@ class Dnora:
         fig_dict = plotter(fig_dict, self.model)
         fig_dict.get("fig").show()
 
+class Plotly:
+    def __init__(self, model: ModelRun):
+        self.model = model
+
+    def waveseries(self, plotter: Callable =plotly_functions.waveseries_plotter):
+        fig_dict = plotter(self.model)
