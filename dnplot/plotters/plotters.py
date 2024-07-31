@@ -62,3 +62,10 @@ class Plotly:
 
     def spectra1d(self,plotter: Callable =plotly_functions.spectra1d_plotter):
         fig_dict = plotter(self.model)
+class Plotly1:
+    def __init__(self, model: ModelRun, model1: ModelRun):
+        self.model = model
+        self.model1 = model1
+
+    def scatter(self, plotter: Callable =plotly_functions.scatter_plotter):
+        fig_dict = plotter(self.model, self.model1)
