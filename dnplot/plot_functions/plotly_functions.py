@@ -151,11 +151,11 @@ def spectra1d_plotter(model: ModelRun):
 
 #install numpy scikit-learn statsmodels
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
 import plotly.graph_objects as go
-def scatter_plotter(e39: ModelRun, nora3:ModelRun):
-    e39 = e39.waveseries()
-    nora3=nora3.waveseries()
+from scipy.stats import gaussian_kde
+def scatter_plotter(model: ModelRun, model1:ModelRun):
+    e39 = model.waveseries()
+    nora3=model1.waveseries()
     e39_ds={
         'time':e39.time(),
         'hs': e39.hs(),
@@ -267,21 +267,27 @@ def scatter_plotter(e39: ModelRun, nora3:ModelRun):
 
         SI=RMSE/x_mean
 
+        xy = np.vstack([df_noNa[x_col].values, df_noNa[y_col].values])
+        z = gaussian_kde(xy)(xy)
         x_range=np.linspace(X.min(),X.max(),100)
         y_range=model.predict(x_range.reshape(-1,1))
-        fig = px.scatter(df_noNa, x=x_col, y=y_col)
+        fig = px.scatter(df_noNa, x=x_col, y=y_col,color=z, color_continuous_scale='jet')
         fig.add_traces(go.Scatter(x=x_range.flatten(), y=y_range.flatten(), name='Linear regression'))
         fig.update_layout(
+            coloraxis_colorbar=dict(
+                title='Density',
+                y=0.45,
+                x=1.015,
+            ),
             annotations=[
                 dict(
-                    x=1.114,
-                    y=0.9,
+                    x=0.001,
+                    y=0.995,
                     xref='paper',
                     yref='paper',
                     text=(
                         f'N = {len(df[x_col])}<br>'
                         f'Bias = {x_mean - y_mean:.4f}<br>'
-                        f'Correlation = {"Positive" if correlation > 0 else "Negative" if correlation < 0 else "None"}<br>'
                         f'R\u00b2= {correlation:.4f}<br>'
                         f'RMSE= {RMSE:.4F}<br>'
                         f'SI= {SI:.4F}'
@@ -292,6 +298,7 @@ def scatter_plotter(e39: ModelRun, nora3:ModelRun):
                     bgcolor='white',
                     borderpad=4,
                     bordercolor='black',
+                    opacity=0.55
                 )
             ]
         )
