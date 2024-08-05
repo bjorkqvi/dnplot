@@ -252,3 +252,48 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
     update_plot(0)
     plt.show(block=True)
     return fig_dict
+
+import cmocean
+def current_plotter(fig_dict: dict, model: ModelRun) -> dict:
+    def update_plot(val):
+        nonlocal fig_dict
+        nonlocal figure_initialized
+        fig_dict = draw.draw_magnitude(
+            fig_dict,
+            current.x(native=True),
+            current.y(native=True),
+            current.magnitude()[val, :, :]*0,
+            vmax=np.max(current.magnitude()),
+            vmin=0,
+            cmap=plt.cm.Blues,
+        )
+        fig_dict = draw.draw_streamplot(
+            fig_dict,
+            current.x(native=True),
+            current.y(native=True),
+            current.u()[val, :, :],
+            current.v()[val, :, :],
+            linewidth=2,
+            density=5,
+            cmap=plt.cm.jet,
+        )
+        fig_dict["ax"].set_title(f"{current.time(datetime=False)[val]} {current.name}")
+        figure_initialized = True
+
+    current = model.current()
+    grid = model.grid()
+    figure_initialized = False
+    if len(current.time()) > 1:
+        ax_slider = plt.axes([0.17, 0.05, 0.65, 0.03])
+        time_slider = Slider(
+            ax_slider, "time_index", 0, len(current.time()) - 1, valinit=0, valstep=1
+        )
+        time_slider.on_changed(update_plot)
+
+    update_plot(0)
+    fig_dict["ax"].set_xlabel(current.core.x_str)
+    fig_dict["ax"].set_ylabel(current.core.y_str)
+    fig_dict["sbar"].set_label("current speed [m/s]")
+    plt.show(block=True)
+
+    return fig_dict

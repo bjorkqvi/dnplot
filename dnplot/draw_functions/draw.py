@@ -228,3 +228,72 @@ def draw_graph_spectra1d(fig_dict, spec, freq, dirm, spr) -> dict:
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax2.legend(lines1+lines2,labels1+labels2)
     return fig_dict
+
+# For ocean_current plotter
+def draw_streamplot(
+    
+    fig_dict: dict,
+    lon: np.ndarray,
+    lat: np.ndarray,
+    xdata: np.ndarray,
+    ydata: np.ndarray,
+    cmap,
+    density: Optional[float] = None,
+    linewidth: Optional[float] = None,
+    arrowsize: float = 1.0,
+    label: str = "__nolegend__",
+):
+    fig = fig_dict.get("fig")
+    ax = fig_dict.get("ax")
+    strm=ax.streamplot(
+        lon,
+        lat,
+        xdata,
+        ydata,
+        cmap=cmap,
+        color=np.sqrt(xdata**2 + ydata**2),
+        linewidth=linewidth,
+        arrowsize=arrowsize,
+        density=density
+    )
+    if label != "__nolegend__":
+        ax.legend()
+
+    if cmap is not None:
+        sbar = fig_dict.get("sbar") or fig.colorbar(strm.lines)
+        fig_dict["sbar"] = sbar
+
+    fig_dict["strm"] = strm
+    return fig_dict
+
+def draw_magnitude(
+    fig_dict: dict,
+    x: np.ndarray,
+    y: np.ndarray,
+    data: np.ndarray,
+    cmap,
+    vmax: Optional[float] = None,
+    vmin: Optional[float] = None,
+    label: str = "__nolegend__",
+):
+    fig = fig_dict.get("fig")
+    ax = fig_dict.get("ax")
+    if vmin is None:
+        vmin = np.min(data)
+    if vmax is None:
+        vmax = np.max(data)
+
+    # if vmax-vmin<20:
+    levels = np.linspace(
+        np.floor(vmin), np.ceil(vmax), np.floor(vmax - vmin + 2).astype(int)
+    )
+    # else:
+    #     levels = np.linspace(np.floor(vmin), np.ceil(vmax), 11)
+    xx, yy = np.meshgrid(x, y)
+    tri = mtri.Triangulation(xx.ravel(), yy.ravel())
+    if len(levels) > 10:
+        cont = ax.tricontourf(tri, data.ravel(), cmap=cmap, levels=levels)
+    else:
+        cont = ax.pcolor(x, y, data, cmap=cmap, label=label)
+
+    return fig_dict

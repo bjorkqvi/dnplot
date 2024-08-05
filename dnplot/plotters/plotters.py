@@ -52,3 +52,17 @@ class Dnora:
         fig_dict = plotter(fig_dict, self.model)
         fig_dict.get("fig").show()
 
+    def current(self, plotter: Callable = dnora_functions.current_plotter):
+        fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
+        gl = ax.gridlines(
+            crs=ccrs.PlateCarree(),
+            draw_labels=True,
+            color="black",
+            alpha=1,
+            linestyle="--",
+        )
+        gl.top_labels = None
+        gl.right_labels = None
+        fig_dict = {"fig": fig, "ax": ax, "gl": gl}
+        fig_dict = plotter(fig_dict, self.model)
+        fig_dict.get("fig").show()
