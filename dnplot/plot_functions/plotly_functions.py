@@ -2,8 +2,15 @@ from __future__ import annotations
 from dash import Dash, dcc, html, Input, Output
 from plotly.subplots import make_subplots
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
+from sklearn.linear_model import LinearRegression
+import plotly.graph_objects as go
+from scipy.stats import gaussian_kde
+import os
+from threading import Timer
+import webbrowser
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -140,10 +147,6 @@ def linear_regression_line(x,y,fig):
     fig.add_traces(go.Scatter(x=x_range.flatten(), y=y_range.flatten(), mode='lines', name='Linear regression',visible=True))
     return fig
 
-#install numpy scikit-learn statsmodels
-from sklearn.linear_model import LinearRegression
-import plotly.graph_objects as go
-from scipy.stats import gaussian_kde
 def scatter_plotter(model: ModelRun, model1:ModelRun):
     ds_model=model.waveseries()
     ds1_model1=model1.waveseries()
@@ -157,7 +160,6 @@ def scatter_plotter(model: ModelRun, model1:ModelRun):
     df_column=[col for col in df.columns if col.endswith(f' {ds_model.name}')]
     df1_column=[col for col in df.columns if col.endswith(f' {ds1_model1.name}')]
     df_noNa=df.dropna().reset_index(drop=True)
-    breakpoint()
     app = Dash(__name__)
     app.layout = html.Div([
         html.H1(ds_model.name, style={'textAlign': 'center'}),
@@ -267,6 +269,12 @@ def scatter_plotter(model: ModelRun, model1:ModelRun):
                 l=0,r=0,t=40,b=0
             )
         )
+        
         return fig
-    app.run_server("0.0.0.0", 8000, debug=True)
+    
+    def open_browser():
+        if not os.environ.get("WERKZEUG_RUN_MAIN"):
+            webbrowser.open_new('http://127.0.0.1:1222/')
 
+    Timer(1, open_browser).start()
+    app.run_server(debug=True, port=1222)
