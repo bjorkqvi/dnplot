@@ -36,10 +36,7 @@ def waveseries_plotter(model: ModelRun):
         xaxis_title='UTC',
         yaxis_title='Values'
     )
-
     fig.show()
-
-
 
 
 def max_y(var):
@@ -80,7 +77,6 @@ def spectra_plotter(model: ModelRun):
             persistence_type='session',
             id='time_slider',
         ),
-        
         html.Label("inds_index"),
         dcc.Slider(
             min=inds_df['inds'].min(),
@@ -144,7 +140,6 @@ def spectra_plotter(model: ModelRun):
                     line = dict(color='red', dash='dash')),
                     secondary_y=True
                 )
-
         fig_left.update_layout(
             xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
             yaxis=dict(
@@ -159,7 +154,6 @@ def spectra_plotter(model: ModelRun):
             )
         )
         fig_left.update_yaxes(secondary_y=True, showgrid=False)
-    
 
         fig_right = go.Figure(go.Barpolar(
             r=freqs2.repeat(len(dirs2)),  
@@ -170,8 +164,6 @@ def spectra_plotter(model: ModelRun):
                 colorscale='Blues'
             )
         ))
-
-        
         fig_right.update_layout(
             polar=dict(
                 radialaxis=dict(
@@ -214,11 +206,6 @@ def spectra_plotter(model: ModelRun):
 
     Timer(1, open_browser).start()
     app.run_server(debug=True, port=3045)
-
-
-
-
-
 
 
 def spectra1d_plotter(model: ModelRun):
@@ -366,7 +353,6 @@ def calculate_correlation(x,y):
     x_std = x_var ** 0.5
     y_std = y_var ** 0.5
     correlation = covariance / (x_std * y_std)
-    
     return correlation
 
 def calculate_RMSE(x,y):
