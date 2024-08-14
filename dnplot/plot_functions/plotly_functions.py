@@ -39,16 +39,23 @@ def waveseries_plotter(model: ModelRun):
 
     fig.show()
 
-def spectra1d_plotter(model: ModelRun):
+
+
+
+def max_y(var):
+    max = np.max(var)
+    upper_limit = ((max // 5 + 1) * 5)
+    return upper_limit
+
+def spectra_plotter(model: ModelRun):
+    spectra=model.spectra()
     spectra1d = model.spectra1d()
-    
     time = {
-        'time': spectra1d.time(),
+        'time': spectra.time(),
     }
     inds = {
-        'inds': spectra1d.inds(),
+        'inds': spectra.inds(),
     }
-    
     time_df = pd.DataFrame(time)
     time_df['time'] = pd.to_datetime(time_df['time'])
     time_df['hour'] = time_df['time'].dt.hour
@@ -58,7 +65,8 @@ def spectra1d_plotter(model: ModelRun):
     app = Dash(__name__)
     
     app.layout = html.Div([
-        html.H1(spectra1d.name, style={'textAlign': 'center'}),
+        html.H1(id="title", style={'textAlign': 'center'}),
+        html.H2(id='smaller_title', style={'textAlign': 'center'}),
         
         html.Label("time_index"),
         dcc.Slider(
@@ -85,26 +93,260 @@ def spectra1d_plotter(model: ModelRun):
             persistence_type='session',
             id='inds_slider',
         ),
-        
-        dcc.Graph(id="spectra1d_graph"),
+        html.Div([
+            dcc.Graph(id="spectra1d_graph", style={'width': '50%', 'display': 'inline-block'}),
+            dcc.Graph(id="spectra2d_graph", style={'width': '50%', 'display': 'inline-block'}),
+        ]),
     ])
     
     @app.callback(
-        Output("spectra1d_graph", "figure"), 
-        Input("time_slider", "value"),
-        Input("inds_slider", "value"),
+        [Output('title','children'),
+         Output('smaller_title', 'children'),
+         Output("spectra1d_graph", "figure"), 
+         Output("spectra2d_graph", "figure")],
+        [Input("time_slider", "value"),
+         Input("inds_slider", "value")],
     )
     def display_spectra1d(time_r, inds_r):
         selected_time_df = time_df[time_df["hour"] == time_r]
-        spectrum = spectra1d.spec()[selected_time_df.index[0], inds_r, :]
-        freqs = spectra1d.freq()
 
-        fig = px.line(x=freqs, y=spectrum, labels={'x': 'Frequency', 'y': 'Wavespectrum'})
-        fig.update_layout(
-            yaxis_range=[0, 75],
+        spectrum1 = spectra1d.spec()[selected_time_df.index[0], inds_r, :]
+
+        if spectra1d.dirm() is not None:
+            dirm=spectra1d.dirm()[selected_time_df.index[0], inds_r, :]
+        if spectra1d.spr() is not None:
+            spr=spectra1d.spr()[selected_time_df.index[0], inds_r, :]
+        freqs1 = spectra1d.freq()
+        
+        spectrum2 = spectra.spec()[selected_time_df.index[0], inds_r, :, :]
+        freqs2 = spectra.freq()
+        dirs2 = spectra.dirs()
+        
+        fig_left=make_subplots(specs=[[{'secondary_y':True}]])
+        fig_left.add_trace(
+            go.Scatter(x=freqs1,y=spectrum1,mode='lines',name='Spec(m<sup>2</sup>s)'),
+            secondary_y=False
+            )
+        if dirm is not None:
+            fig_left.add_trace(
+                go.Scatter(x=freqs1,y=dirm,name='dirm(deg)', mode='lines',
+                line = dict(color='green')),
+                secondary_y=True
+            )
+            if spr is not None:
+                fig_left.add_trace(
+                    go.Scatter(x=freqs1,y=dirm-spr,name='spr-(deg)',
+                    line = dict(color='red', dash='dash')),
+                    secondary_y=True
+                )
+                fig_left.add_trace(
+                    go.Scatter(x=freqs1,y=dirm+spr,name='spr+(deg)',
+                    line = dict(color='red', dash='dash')),
+                    secondary_y=True
+                )
+
+        fig_left.update_layout(
+            xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
+            yaxis=dict(
+                title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
+                range=[0,int(max_y(spectra1d.spec()))],
+            ),
+            yaxis2=dict(
+                title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
+                overlaying='y',
+                side='right',
+                range=[0,int(max_y(spectra1d.dirm()))],
+            )
         )
-        return fig
-    app.run_server("0.0.0.0", 8000, debug=True)
+        fig_left.update_yaxes(secondary_y=True, showgrid=False)
+    
+
+        fig_right = go.Figure(go.Barpolar(
+            r=freqs2.repeat(len(dirs2)),  
+            theta=np.tile(dirs2, len(freqs2)),  
+            width=[14.7] * len(np.tile(dirs2, len(freqs2))),
+            marker=dict(
+                color=spectrum2.flatten(),
+                colorscale='Blues'
+            )
+        ))
+
+        
+        fig_right.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    tickmode='array',
+                    tickvals=[0,1,2,3,4,5],
+                    ticktext=[0,0.1,0.2,0.3,0.4,0.5]
+                ),
+                angularaxis=dict(
+                    visible=True,
+                    rotation=90,  # Rotate so that 0 degrees is at the top
+                    direction='clockwise'  # Ensure the direction is clockwise
+                )
+            ),
+            coloraxis_colorbar=dict(
+                title='Spectrum Intensity'
+            ) # Make sure the plot scales with the container size
+        )
+
+        fig_left.update_layout(
+            width=900,
+            height=800,
+            margin=dict(
+                l=50,r=50,t=100,b=0
+            )
+        )
+        fig_right.update_layout(
+            width=900,
+            height=800,
+            margin=dict(
+                l=10,r=50,t=100,b=20
+            )
+        )
+        title = f"{spectra.time(datetime=False)[selected_time_df.index[0]]} {spectra.name}"
+        smaller_title = f"Lon={spectra.lon()[inds_r]} Lat={spectra.lat()[inds_r]}"
+        
+        return title, smaller_title,fig_left, fig_right
+    def open_browser():
+        if not os.environ.get("WERKZEUG_RUN_MAIN"):
+            webbrowser.open_new('http://127.0.0.1:3045/')
+
+    Timer(1, open_browser).start()
+    app.run_server(debug=True, port=3045)
+
+
+
+
+
+
+
+def spectra1d_plotter(model: ModelRun):
+    spectra1d = model.spectra1d()
+    time = {
+        'time': spectra1d.time(),
+    }
+    inds = {
+        'inds': spectra1d.inds(),
+    }
+    time_df = pd.DataFrame(time)
+    time_df['time'] = pd.to_datetime(time_df['time'])
+    time_df['hour'] = time_df['time'].dt.hour
+    
+    inds_df = pd.DataFrame(inds)
+    
+    app = Dash(__name__)
+    
+    app.layout = html.Div([
+        html.H1(id="title", style={'textAlign': 'center'}),
+        html.H2(id='smaller_title', style={'textAlign': 'center'}),
+        
+        html.Label("time_index"),
+        dcc.Slider(
+            min=time_df['hour'].min(),
+            max=time_df['hour'].max(),
+            step=1,
+            value=time_df['hour'].min(),
+            tooltip={"placement": "bottom", "always_visible": True},
+            updatemode='drag',
+            persistence=True,
+            persistence_type='session',
+            id='time_slider',
+        ),
+        
+        html.Label("inds_index"),
+        dcc.Slider(
+            min=inds_df['inds'].min(),
+            max=inds_df['inds'].max(),
+            step=1,
+            value=inds_df['inds'].min(),
+            tooltip={"placement": "bottom", "always_visible": True},
+            updatemode='drag',
+            persistence=True,
+            persistence_type='session',
+            id='inds_slider',
+        ),
+        html.Div([
+            dcc.Graph(id="spectra1d_graph"),
+
+        ]),
+    ])
+    
+    @app.callback(
+        [Output('title','children'),
+         Output('smaller_title', 'children'),
+         Output("spectra1d_graph", "figure")],
+        [Input("time_slider", "value"),
+         Input("inds_slider", "value")],
+    )
+    def display_spectra1d(time_r, inds_r):
+        selected_time_df = time_df[time_df["hour"] == time_r]
+
+        spectrum1 = spectra1d.spec()[selected_time_df.index[0], inds_r, :]
+
+        if spectra1d.dirm() is not None:
+            dirm=spectra1d.dirm()[selected_time_df.index[0], inds_r, :]
+        if spectra1d.spr() is not None:
+            spr=spectra1d.spr()[selected_time_df.index[0], inds_r, :]
+        freqs1 = spectra1d.freq()
+        
+        fig=make_subplots(specs=[[{'secondary_y':True}]])
+        fig.add_trace(
+            go.Scatter(x=freqs1,y=spectrum1,mode='lines',name='Spec (m<sup>2</sup>s)'),
+            secondary_y=False
+            )
+        if dirm is not None:
+            fig.add_trace(
+                go.Scatter(x=freqs1,y=dirm,name='dirm (deg)', mode='lines',
+                line = dict(color='green')),
+                secondary_y=True
+            )
+            if spr is not None:
+                fig.add_trace(
+                    go.Scatter(x=freqs1,y=dirm-spr,name='spr- (deg)',
+                    line = dict(color='red', dash='dash')),
+                    secondary_y=True
+                )
+                fig.add_trace(
+                    go.Scatter(x=freqs1,y=dirm+spr,name='spr+ (deg)',
+                    line = dict(color='red', dash='dash')),
+                    secondary_y=True
+                )
+
+        fig.update_layout(
+            xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
+            yaxis=dict(
+                title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
+                range=[0,int(max_y(spectra1d.spec()))],
+            ),
+            yaxis2=dict(
+                title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
+                overlaying='y',
+                side='right',
+                range=[0,int(max_y(spectra1d.dirm()))],
+            )
+        )
+        fig.update_yaxes(secondary_y=True, showgrid=False)
+
+        fig.update_layout(
+            width=1800,
+            height=800,
+            margin=dict(
+                l=0,r=0,t=20,b=0
+            )
+        )
+        title = f"{spectra1d.time(datetime=False)[selected_time_df.index[0]]} {spectra1d.name}"
+        smaller_title = f"Lon={spectra1d.lon()[inds_r]} Lat={spectra1d.lat()[inds_r]}"
+        return title, smaller_title, fig,
+    
+    def open_browser():
+        if not os.environ.get("WERKZEUG_RUN_MAIN"):
+            webbrowser.open_new('http://127.0.0.1:2934/')
+
+    Timer(1, open_browser).start()
+    app.run_server(debug=True, port=2934)
+
+
 
 def xarray_to_dataframe(model) -> pd.DataFrame:
     df=model.ds().to_dataframe()
