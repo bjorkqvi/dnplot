@@ -478,7 +478,7 @@ def scatter_plotter(model: ModelRun, model1:ModelRun):
                     xref='paper',
                     yref='paper',
                     text=(
-                        f'N = {len(df[x_col])}<br>'
+                        f'N = {len(df_noNa[x_col])}<br>'
                         f'Bias = {df_noNa[x_col].mean() - df_noNa[y_col].mean():.4f}<br>'
                         f'R\u00b2= {correlation:.4f}<br>'
                         f'RMSE= {RMSE:.4F}<br>'
@@ -501,7 +501,6 @@ def scatter_plotter(model: ModelRun, model1:ModelRun):
                 l=0,r=0,t=40,b=0
             )
         )
-        
         return fig
     
     def open_browser():
