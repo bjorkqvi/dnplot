@@ -267,91 +267,94 @@ from sklearn.linear_model import LinearRegression
 from matplotlib.colors import Normalize
 from matplotlib import cm
 from scipy.stats import gaussian_kde
+
+def xarray_to_dataframe(model) -> pd.DataFrame:
+    df=model.ds().to_dataframe()
+    df=df.reset_index()
+    col_drop=['lon','lat','inds']
+    df=df.drop(col_drop,axis='columns')
+    df.set_index('time', inplace=True)
+    df=df.resample('h').asfreq()
+    df=df.reset_index()
+    return df
+def calculate_correlation(x,y):
+        x_mean = x.mean()
+        y_mean = y.mean()
+        covariance = ((x - x_mean) * (y - y_mean)).mean()
+        x_var = ((x - x_mean) ** 2).mean()
+        y_var = ((y - y_mean) ** 2).mean()
+        x_std = x_var ** 0.5
+        y_std = y_var ** 0.5
+        correlation = covariance / (x_std * y_std)
+        return correlation
+
+def calculate_RMSE(x,y):
+    X = x.values.reshape(-1,1)
+    linear=LinearRegression()
+    linear.fit(X,y)
+    a=linear.coef_[0]
+    b=linear.intercept_
+    y_estimated=(a*x+b)
+    y_rmse=(y-y_estimated)**2
+    RMSE=(y_rmse.mean())**0.5
+    return RMSE
+
 def scatter1_plotter(fig_dict: dict, model: ModelRun, model1: ModelRun, var):
-    # Extract wave series data
-    e39 = model.waveseries()
-    nora3 = model1.waveseries()
+    ds_model=model.waveseries()
+    ds1_model1=model1.waveseries()
     x = var[0]
     y = var[1]
-    
-    e39_ds = {
-        'time': e39.time(),
-        'hs': e39.hs(),
-        'hs_max': e39.hs_max(),
-        'tm01': e39.tm01(),
-        'tm02': e39.tm02(),
-        'tp': e39.tp(),
-        'tz': e39.tz(),
-        'dirm_sea': e39.dirm_sea(),
-        'dirs': e39.dirs(),
-    }
-    nora3_ds = {
-        'time': nora3.time(),
-        'hs': nora3.hs(),
-        'tm01': nora3.tm01(),
-        'tm02': nora3.tm02(),
-        'tm_10': nora3.tm_10(),
-        'dirm': nora3.dirm(),
-    }
-    
-    e39_df = pd.DataFrame(e39_ds)
-    nora3_df = pd.DataFrame(nora3_ds)
-    
+    df_model=xarray_to_dataframe(ds_model)
+    df1_model1=xarray_to_dataframe(ds1_model1)
+    combined_df = pd.concat([df_model, df1_model1], axis=1)
 
-    e39_df.set_index('time', inplace=True)
-    e39_df = e39_df.resample('h').asfreq().reset_index()
-    e39_df = e39_df.dropna().reset_index(drop=True)
-    nora3_df = nora3_df.set_index('time').reindex(e39_df['time']).reset_index()
-    nora3_df = nora3_df.dropna().reset_index(drop=True)
-    # Calculates correlation
-    x_mean = e39_df[x].mean()
-    y_mean = nora3_df[y].mean()
-    cov_sum = ((e39_df[x] - x_mean) * (nora3_df[y] - y_mean)).sum()
-    covariance = cov_sum / len(e39_df)
-    x_var = ((e39_df[x] - x_mean) ** 2).sum() / len(e39_df)
-    y_var = ((nora3_df[y] - y_mean) ** 2).sum() / len(nora3_df)
-    x_std = np.sqrt(x_var)
-    y_std = np.sqrt(y_var)
-    correlation = covariance / (x_std * y_std)
-    
-    # Makes regression line 
-    # Calculates root squared mean error
-    # And scatter indax
-    X = e39_df[x].values.reshape(-1, 1)
-    model = LinearRegression()
-    model.fit(X, nora3_df[y])
+    combined_df_cleaned = combined_df.dropna()
 
-    a=model.coef_[0]
-    b=model.intercept_
-    y_estimated=(a*e39_df[x]+b)
-    squared_diffs = (nora3_df[y] - y_estimated) ** 2
-    RMSE = (squared_diffs.mean())**0.5
-    SI = RMSE/x_mean
+    df_model = combined_df_cleaned.iloc[:, :df_model.shape[1]].reset_index(drop=True)
+    df1_model1 = combined_df_cleaned.iloc[:, df_model.shape[1]:].reset_index(drop=True)
+    correlation=calculate_correlation(df_model[x],df1_model1[y])
 
-    x_range = np.linspace(X.min(), X.max(), 100)
-    y_range = model.predict(x_range.reshape(-1, 1))
+    RMSE=calculate_RMSE(df_model[x],df1_model1[y])
+    SI=RMSE/df_model[x].mean()
+    X = df_model[x].values.reshape(-1,1)
+    linear=LinearRegression()
+    linear.fit(X,df1_model1[y])
+
+    x_range = np.linspace(0, np.ceil(X.max()), 100)
+    y_range = linear.predict(x_range.reshape(-1, 1))
     # Text on the figure
     text = '\n'.join((
-        f'N={len(e39_df)}',
-        f'Bias{x_mean - y_mean:.4f}',
+        f'N={len(df_model)}',
+        f'Bias{df_model[x].mean() - df1_model1[y].mean():.4f}',
         f'R\u00b2={correlation:.4f}',
         f'RMSE={RMSE:.4f}',
         f'SI={SI:.4f}',
     ))
     # color for scatter density
-    xy = np.vstack([e39_df[x].values, nora3_df[y].values])
+    xy = np.vstack([df_model[x].values, df1_model1[y].values])
     z = gaussian_kde(xy)(xy)
     norm = Normalize(vmin=z.min(), vmax=z.max())
     cmap = cm.jet 
     sm = cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])
 
-    title=rf"$\bf{{{nora3.name}}}$" + "\n" + rf"{x} vs {y}"
+    title=rf"$\bf{{{ds_model.name}}}$" + "\n" + rf"{x} vs {y}"
     fig_dict['ax'].set_title(title, fontsize=14)
-    fig_dict['ax'].scatter(e39_df[x], nora3_df[y], c=z,cmap=cmap, norm=norm,s=50)
+    fig_dict['ax'].scatter(df_model[x], df1_model1[y], c=z,cmap=cmap, norm=norm,s=50)
     fig_dict['ax'].plot(x_range, y_range, color='red', linewidth=2, label='Regression line')
-    fig_dict['ax'].set_xlabel(f"{e39.meta.get(x)['long_name']}\n ({e39.meta.get(x)['unit']})")
-    fig_dict['ax'].set_ylabel(f"{nora3.meta.get(y)['long_name']}\n ({nora3.meta.get(y)['unit']})")
+
+    x_line=np.linspace(0,np.ceil(df_model[x].max()), 100)
+    a=np.sum(df_model[x]*df1_model1[y])/np.sum(df_model[x]**2)
+    y_line=a*x_line
+
+    fig_dict['ax'].plot(x_line,y_line, linewidth=2, label='One parameter line')
+
+    x_values = np.linspace(0, np.ceil(df_model[x].max()), 100)
+    y_values = x_values
+    fig_dict['ax'].plot(x_values, y_values, linewidth=2, label='x=y')
+    
+    fig_dict['ax'].set_xlabel(f"{ds_model.meta.get(x)['long_name']}\n ({ds_model.meta.get(x)['unit']})")
+    fig_dict['ax'].set_ylabel(f"{ds1_model1.meta.get(y)['long_name']}\n ({ds1_model1.meta.get(y)['unit']})")
     
     #color bar
     cbar = plt.colorbar(sm, ax=fig_dict['ax'])
@@ -360,7 +363,7 @@ def scatter1_plotter(fig_dict: dict, model: ModelRun, model1: ModelRun, var):
     props = dict(boxstyle='square', facecolor='white', alpha=0.6)
     ax=plt.gca()
     fig_dict['ax'].text(
-        0.005, 0.95, text, bbox=props, fontsize=12,
+        0.005, 0.90, text, bbox=props, fontsize=12,
         transform=ax.transAxes, verticalalignment='top',
         horizontalalignment='left'
     )
