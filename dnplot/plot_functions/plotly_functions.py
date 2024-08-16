@@ -43,6 +43,76 @@ def max_y(var):
     max = np.max(var)
     upper_limit = ((max // 5 + 1) * 5)
     return upper_limit
+
+def draw_scatter_mapbox(lat,lon,lat_ind,lon_ind):
+    fig=go.Figure(go.Scattermapbox(
+        lat=lat,
+        lon=lon,
+        mode='markers',
+        marker=dict(size=12, color=['yellow' if lat_i == lat_ind and lon_i == lon_ind else 'darkred' for lat_i, lon_i in zip(lat, lon)]),
+    ))
+    fig.update_layout(
+        mapbox=dict(
+            style='carto-positron',
+            center=dict(lat=lat_ind,lon=lon_ind),
+            zoom=8
+        )
+    )
+    return fig
+
+def draw_plotly_graph_spectra1d(freq,spec,dirm,spr):
+    fig=make_subplots(specs=[[{'secondary_y':True}]])
+    fig.add_trace(
+        go.Scatter(x=freq,y=spec,mode='lines',name='Spec (m<sup>2</sup>s)'),
+        secondary_y=False
+        )
+    if dirm is not None:
+        fig.add_trace(
+            go.Scatter(x=freq,y=dirm,name='dirm (deg)', mode='lines',
+            line = dict(color='green')),
+            secondary_y=True
+        )
+        if spr is not None:
+            fig.add_trace(
+                go.Scatter(x=freq,y=dirm-spr,name='spr- (deg)',
+                line = dict(color='red', dash='dash')),
+                secondary_y=True
+            )
+            fig.add_trace(
+                go.Scatter(x=freq,y=dirm+spr,name='spr+ (deg)',
+                line = dict(color='red', dash='dash')),
+                secondary_y=True
+            )
+    fig.update_yaxes(secondary_y=True, showgrid=False)
+    return fig
+
+
+
+def draw_plotly_graph_spectra(freq,spec,dirs):
+    fig = go.Figure(go.Barpolar(
+        r=freq.repeat(len(dirs)),  
+        theta=np.tile(dirs, len(freq)),  
+        width=[14.7] * len(np.tile(dirs, len(freq))),
+        marker=dict(
+            color=spec.flatten(),
+            colorscale='Blues'
+        )
+    ))
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                tickmode='array',
+                tickvals=[0,1,2,3,4,5],
+                ticktext=[0,0.1,0.2,0.3,0.4,0.5]
+            ),
+            angularaxis=dict(
+                visible=True,
+                rotation=90,  # Rotate so that 0 degrees is at the top
+                direction='clockwise'  # Ensure the direction is clockwise
+            )
+        ),
+    )
+    return fig
 def spectra_plotter(model: ModelRun):
     spectra=model.spectra()
     spectra1d = model.spectra1d()
@@ -109,40 +179,38 @@ def spectra_plotter(model: ModelRun):
     def display_spectra1d(time_r, inds_r):
         selected_time_df = time_df[time_df["hour"] == time_r]
 
-        spectrum1 = spectra1d.spec()[selected_time_df.index[0], inds_r, :]
-        dirm=spectra1d.dirm()[selected_time_df.index[0], inds_r, :] if spectra1d.dirm() is not None else None
-        spr=spectra1d.spr()[selected_time_df.index[0], inds_r, :] if spectra1d.spr() is not None else None
-        freqs1 = spectra1d.freq()
-        
-        spectrum2 = spectra.spec()[selected_time_df.index[0], inds_r, :, :]
-        lon = spectra.lon()[inds_r]
-        lat = spectra.lat()[inds_r]
-        freqs2 = spectra.freq()
-        dirs2 = spectra.dirs()
+        fig_right=draw_plotly_graph_spectra(
+            freq=spectra.freq(),
+            spec=spectra.spec()[selected_time_df.index[0], inds_r, :, :],
+            dirs=spectra.dirs()
+        )
+        fig_right.update_layout(
+            width=600,
+            height=510,
+            margin=dict(
+                l=0,r=0,t=100,b=50
+            ),
+        )
 
-        fig_left=make_subplots(specs=[[{'secondary_y':True}]])
-        fig_left.add_trace(
-            go.Scatter(x=freqs1,y=spectrum1,mode='lines',name='Spec (m<sup>2</sup>s)'),
-            secondary_y=False
+        fig_right2=draw_scatter_mapbox(
+            lat=spectra.lat(),
+            lon=spectra.lon(),
+            lat_ind=spectra.lat()[inds_r],
+            lon_ind=spectra.lon()[inds_r]
             )
-        if dirm is not None:
-            fig_left.add_trace(
-                go.Scatter(x=freqs1,y=dirm,name='dirm (deg)', mode='lines',
-                line = dict(color='green')),
-                secondary_y=True
+        fig_right2.update_layout(
+            width=1000,
+            height=500,
+            margin=dict(
+                l=50,r=0,t=10,b=50
             )
-            if spr is not None:
-                fig_left.add_trace(
-                    go.Scatter(x=freqs1,y=dirm-spr,name='spr- (deg)',
-                    line = dict(color='red', dash='dash')),
-                    secondary_y=True
-                )
-                fig_left.add_trace(
-                    go.Scatter(x=freqs1,y=dirm+spr,name='spr+ (deg)',
-                    line = dict(color='red', dash='dash')),
-                    secondary_y=True
-                )
-        fig_left.update_yaxes(secondary_y=True, showgrid=False)
+        )
+
+        fig_left=draw_plotly_graph_spectra1d(
+            freq=spectra1d.freq(),
+            spec=spectra1d.spec()[selected_time_df.index[0], inds_r, :],
+            dirm=spectra1d.dirm()[selected_time_df.index[0], inds_r, :] if spectra1d.dirm() is not None else None,
+            spr=spectra1d.spr()[selected_time_df.index[0], inds_r, :] if spectra1d.spr() is not None else None)
         fig_left.update_layout(
             xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
             yaxis=dict(
@@ -162,53 +230,6 @@ def spectra_plotter(model: ModelRun):
             )
         )
 
-        fig_right = go.Figure(go.Barpolar(
-            r=freqs2.repeat(len(dirs2)),  
-            theta=np.tile(dirs2, len(freqs2)),  
-            width=[14.7] * len(np.tile(dirs2, len(freqs2))),
-            marker=dict(
-                color=spectrum2.flatten(),
-                colorscale='Blues'
-            )
-        ))
-        fig_right.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    tickmode='array',
-                    tickvals=[0,1,2,3,4,5],
-                    ticktext=[0,0.1,0.2,0.3,0.4,0.5]
-                ),
-                angularaxis=dict(
-                    visible=True,
-                    rotation=90,  # Rotate so that 0 degrees is at the top
-                    direction='clockwise'  # Ensure the direction is clockwise
-                )
-            ),
-            width=600,
-            height=510,
-            margin=dict(
-                l=0,r=0,t=100,b=50
-            ),
-        )
-        
-        fig_right2=go.Figure(go.Scattermapbox(
-            lat=spectra.lat(),
-            lon=spectra.lon(),
-            mode='markers',
-            marker=dict(size=12, color=['yellow' if lat_i == lat and lon_i == lon else 'darkred' for lat_i, lon_i in zip(spectra.lat(), spectra.lon())]),
-        ))
-        fig_right2.update_layout(
-            width=1000,
-            height=500,
-            margin=dict(
-                l=50,r=0,t=10,b=50
-            ),
-            mapbox=dict(
-                style='carto-positron',
-                center=dict(lat=lat,lon=lon),
-                zoom=8
-            )
-        )
         title = f"{spectra.time(datetime=False)[selected_time_df.index[0]]} {spectra.name}"
         smaller_title = f"Lat={spectra.lat()[inds_r]} Lon={spectra.lon()[inds_r]}"
         
@@ -282,52 +303,23 @@ def spectra1d_plotter(model: ModelRun):
     def display_spectra1d(time_r, inds_r):
         selected_time_df = time_df[time_df["hour"] == time_r]
 
-        spectrum1 = spectra1d.spec()[selected_time_df.index[0], inds_r, :]
-
-        if spectra1d.dirm() is not None:
-            dirm=spectra1d.dirm()[selected_time_df.index[0], inds_r, :]
-        if spectra1d.spr() is not None:
-            spr=spectra1d.spr()[selected_time_df.index[0], inds_r, :]
-        freqs1 = spectra1d.freq()
-        
-        fig=make_subplots(specs=[[{'secondary_y':True}]])
-        fig.add_trace(
-            go.Scatter(x=freqs1,y=spectrum1,mode='lines',name='Spec (m<sup>2</sup>s)'),
-            secondary_y=False
-            )
-        if dirm is not None:
-            fig.add_trace(
-                go.Scatter(x=freqs1,y=dirm,name='dirm (deg)', mode='lines',
-                line = dict(color='green')),
-                secondary_y=True
-            )
-            if spr is not None:
-                fig.add_trace(
-                    go.Scatter(x=freqs1,y=dirm-spr,name='spr- (deg)',
-                    line = dict(color='red', dash='dash')),
-                    secondary_y=True
-                )
-                fig.add_trace(
-                    go.Scatter(x=freqs1,y=dirm+spr,name='spr+ (deg)',
-                    line = dict(color='red', dash='dash')),
-                    secondary_y=True
-                )
+        fig=draw_plotly_graph_spectra1d(
+            freq=spectra1d.freq(),
+            spec=spectra1d.spec()[selected_time_df.index[0], inds_r, :],
+            dirm=spectra1d.dirm()[selected_time_df.index[0], inds_r, :] if spectra1d.dirm() is not None else None,
+            spr=spectra1d.spr()[selected_time_df.index[0], inds_r, :] if spectra1d.spr() is not None else None)
         fig.update_layout(
             xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
             yaxis=dict(
                 title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
-                range=[0,int(max_y(spectra1d.spec()))],
+                range=[0, int(max_y(spectra1d.spec()))],
             ),
             yaxis2=dict(
                 title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
                 overlaying='y',
                 side='right',
                 range=[0,int(max_y(spectra1d.dirm()))],
-            )
-        )
-        fig.update_yaxes(secondary_y=True, showgrid=False)
-
-        fig.update_layout(
+            ),
             width=1800,
             height=800,
             margin=dict(
