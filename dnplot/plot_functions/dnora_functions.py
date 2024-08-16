@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import numpy as np
 from ..defaults import default_variable
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from matplotlib.colors import Normalize
+from matplotlib import cm
+from scipy.stats import gaussian_kde
 from dnora.dnora_type_manager.dnora_types import DnoraDataType
 from typing import TYPE_CHECKING
 
@@ -261,12 +266,6 @@ def scatter_plotter(fig_dict: dict,model: ModelRun, var):
         fig_dict['ax'].set_ylabel(f"{ts.meta.get(y)['long_name']}\n ({ts.meta.get(y)['unit']})")
         fig_dict['ax'].grid(linestyle='--')
         plt.show(block=True)
-
-import pandas as pd
-from sklearn.linear_model import LinearRegression
-from matplotlib.colors import Normalize
-from matplotlib import cm
-from scipy.stats import gaussian_kde
 
 def xarray_to_dataframe(model) -> pd.DataFrame:
     df=model.ds().to_dataframe()
