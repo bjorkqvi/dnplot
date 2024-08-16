@@ -13,11 +13,5 @@ point = dn.grid.Grid(lon=e39.waveseries().lon(), lat=e39.waveseries().lat())
 nora3 = dn.modelrun.NORA3(point, year=2019, month=3)
 nora3.import_spectra()
 nora3.spectra_to_waveseries()
-
-
-
-#plot = dnplot.Dnora(model)
-
-plot = dnplot.Plotly1(e39, nora3)
-#plot.waveseries()
+plot = dnplot.Dnora(model)
 plot.scatter()
