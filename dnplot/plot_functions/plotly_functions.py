@@ -39,11 +39,6 @@ def waveseries_plotter(model: ModelRun):
     fig.show()
 
 
-def max_y(var):
-    max = np.max(var)
-    upper_limit = ((max // 5 + 1) * 5)
-    return upper_limit
-
 def draw_scatter_mapbox(lat,lon,lat_ind,lon_ind):
     fig=go.Figure(go.Scattermapbox(
         lat=lat,
@@ -88,27 +83,38 @@ def draw_plotly_graph_spectra1d(freq,spec,dirm,spr):
 
 
 
-def draw_plotly_graph_spectra(freq,spec,dirs):
+def draw_plotly_graph_spectra(freq, spec, dirs,cmax,cmin):
+    
     fig = go.Figure(go.Barpolar(
         r=freq.repeat(len(dirs)),  
         theta=np.tile(dirs, len(freq)),  
         width=[14.7] * len(np.tile(dirs, len(freq))),
         marker=dict(
             color=spec.flatten(),
-            colorscale='Blues'
+            colorscale='Blues',
+            cmin=cmin,
+            cmax=cmax,
+            colorbar=dict(
+                title='m<sup>2</sup>s',
+                ticks='outside',
+                len=0.75,
+            ),
+            #cmin=global_min,
+            #cmax=global_max,
         )
     ))
+    
     fig.update_layout(
         polar=dict(
             radialaxis=dict(
                 tickmode='array',
-                tickvals=[0,1,2,3,4,5],
-                ticktext=[0,0.1,0.2,0.3,0.4,0.5]
+                tickvals=[0, 1, 2, 3, 4, 5],
+                ticktext=[0, 0.1, 0.2, 0.3, 0.4, 0.5]
             ),
             angularaxis=dict(
                 visible=True,
-                rotation=90,  # Rotate so that 0 degrees is at the top
-                direction='clockwise'  # Ensure the direction is clockwise
+                rotation=90,
+                direction='clockwise'
             )
         ),
     )
@@ -178,17 +184,21 @@ def spectra_plotter(model: ModelRun):
     )
     def display_spectra1d(time_r, inds_r):
         selected_time_df = time_df[time_df["hour"] == time_r]
+        spec1=spectra.spec()[:, inds_r, :, :].flatten()
+        spec1d=spectra1d.spec()[:, inds_r, :].flatten()
 
         fig_right=draw_plotly_graph_spectra(
             freq=spectra.freq(),
-            spec=spectra.spec()[selected_time_df.index[0], inds_r, :, :],
-            dirs=spectra.dirs()
+            spec=spectra.spec()[selected_time_df.index[0], inds_r, :, :].flatten(),
+            dirs=spectra.dirs(),
+            cmin=np.min(spec1),
+            cmax=np.max(spec1),
         )
         fig_right.update_layout(
-            width=600,
-            height=510,
+            width=900,
+            height=900,
             margin=dict(
-                l=0,r=0,t=100,b=50
+                l=200,r=0,t=100,b=50
             ),
         )
 
@@ -215,21 +225,20 @@ def spectra_plotter(model: ModelRun):
             xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
             yaxis=dict(
                 title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
-                range=[0, int(max_y(spectra1d.spec()))],
+                range=[0,np.max(spec1d)*1.1]
             ),
             yaxis2=dict(
                 title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
                 overlaying='y',
                 side='right',
-                range=[0,int(max_y(spectra1d.dirm()))],
+                range=[0,np.max(spectra1d.dirm())*1.1],
             ),
-            width=910,
+            width=1000,
             height=500,
             margin=dict(
                 l=100,r=0,t=100,b=50
             )
         )
-
         title = f"{spectra.time(datetime=False)[selected_time_df.index[0]]} {spectra.name}"
         smaller_title = f"Latitude={spectra1d.lat()[inds_r]:.4f} Longitude={spectra1d.lon()[inds_r]:.4f}"
         
@@ -244,6 +253,7 @@ def spectra_plotter(model: ModelRun):
 
 def spectra1d_plotter(model: ModelRun):
     spectra1d = model.spectra1d()
+
     time = {
         'time': spectra1d.time(),
     }
@@ -302,6 +312,7 @@ def spectra1d_plotter(model: ModelRun):
     )
     def display_spectra1d(time_r, inds_r):
         selected_time_df = time_df[time_df["hour"] == time_r]
+        spec1d=spectra1d.spec()[:, inds_r, :].flatten()
 
         fig=draw_plotly_graph_spectra1d(
             freq=spectra1d.freq(),
@@ -312,13 +323,13 @@ def spectra1d_plotter(model: ModelRun):
             xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
             yaxis=dict(
                 title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
-                range=[0, int(max_y(spectra1d.spec()))],
+                range=[0, (np.max(spec1d)*1.1)],
             ),
             yaxis2=dict(
                 title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
                 overlaying='y',
                 side='right',
-                range=[0,int(max_y(spectra1d.dirm()))],
+                range=[0,(np.max(spectra1d.dirm())*1.1)],
             ),
             width=1800,
             height=800,
@@ -327,7 +338,7 @@ def spectra1d_plotter(model: ModelRun):
             )
         )
         title = f"{spectra1d.time(datetime=False)[selected_time_df.index[0]]} {spectra1d.name}"
-        smaller_title = f"Latitude={spectra1d.lat()[inds_r]:.4f} Longitude={spectra1d.lon()[inds_r],4:.4f}"
+        smaller_title = f"Latitude={spectra1d.lat()[inds_r]:.4f} Longitude={spectra1d.lon()[inds_r]:.4f}"
         return title, smaller_title, fig,
     
     def open_browser():
