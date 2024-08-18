@@ -41,7 +41,7 @@ model = dn.modelrun.NORA3(point, year=2022, month=3, day=18)
 model.import_spectra()
 model.spectra_to_waveseries()
 model.waveseries()
-plot = dnplot.Plotly1(model)
-
+plot = dnplot.Plotly(model)
+plot.waveseries(use_dash=True)
 
 

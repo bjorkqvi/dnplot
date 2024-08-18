@@ -57,8 +57,8 @@ class Plotly:
     def __init__(self, model: ModelRun):
         self.model = model
 
-    def waveseries(self, plotter: Callable =plotly_functions.waveseries_plotter):
-        fig_dict = plotter(self.model)
+    def waveseries(self, use_dash,plotter: Callable =plotly_functions.waveseries_plotter):
+        fig_dict = plotter(self.model, use_dash)
 
     def spectra(self,plotter: Callable =plotly_functions.spectra_plotter):
         fig_dict = plotter(self.model)
