@@ -32,7 +32,7 @@ def waveseries_plotter_basic(model: ModelRun):
         fig.add_trace(trace)
 
     fig.update_layout(
-        title='Waveseries',
+        title=f'{ts.name}',
         xaxis_title='UTC',
         yaxis_title='Values'
     )
@@ -46,7 +46,7 @@ def waveseries_plotter_dash(model: ModelRun):
     var= var.drop(drop,axis='columns')
     app = Dash(__name__)
     app.layout = html.Div([
-        html.H1('Waveseries'),
+        html.H1(id="title", style={'textAlign': 'center'}),
         html.P("Select variable:"),
         dcc.Dropdown(
             id="waveseries-1",
@@ -72,8 +72,9 @@ def waveseries_plotter_dash(model: ModelRun):
 
     @app.callback(
         Output("waveseries_chart", "figure"), 
-        [Input("waveseries-1", "value"), 
-         Input("waveseries-2", "value")]
+        Output('title','children'),
+        Input("waveseries-1", "value"), 
+        Input("waveseries-2", "value")
     )
     def display_time_series(ticker1, ticker2):
         subfig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -90,8 +91,15 @@ def waveseries_plotter_dash(model: ModelRun):
             subfig.update_yaxes(title_text=ticker2, secondary_y=True)
         else:
             subfig.update_layout(xaxis_title="UTC", yaxis_title=ticker1)
-        
-        return subfig
+        subfig.update_layout(
+            width=1800,
+            height=900,
+            margin=dict(
+                l=100,r=0,t=100,b=100
+            ),
+        )
+        title = f"{ts.name} Waveseries"
+        return subfig, title
     def open_browser():
         if not os.environ.get("WERKZEUG_RUN_MAIN"):
             webbrowser.open_new('http://127.0.0.1:3095/')
