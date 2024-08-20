@@ -340,6 +340,16 @@ def scatter1_plotter(fig_dict: dict, model: ModelRun, model1: ModelRun, var):
     title=rf"$\bf{{{ds_model.name}}}$" + "\n" + rf"{x} vs {y}"
     fig_dict['ax'].set_title(title, fontsize=14)
     fig_dict['ax'].scatter(df_model[x], df1_model1[y], c=z,cmap=cmap, norm=norm,s=50)
+    x_max=np.ceil(df_model[x].max())
+    y_max=np.ceil(df1_model1[y].max())
+
+    if x_max > y_max:
+        fig_dict['ax'].set_ylim([0, x_max])
+        fig_dict['ax'].set_xlim([0, x_max])
+    else: 
+        fig_dict['ax'].set_xlim([0, y_max])
+        fig_dict['ax'].set_ylim([0, y_max])
+
     fig_dict['ax'].plot(x_range, y_range, color='red', linewidth=2, label='Regression line')
 
     x_line=np.linspace(0,np.ceil(df_model[x].max()), 100)
