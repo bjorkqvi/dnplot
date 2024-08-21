@@ -16,13 +16,132 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from dnora.modelrun import ModelRun
 
+def xarray_to_dataframe(model) -> pd.DataFrame:
+    df=model.ds().to_dataframe()
+    df=df.reset_index()
+    col_drop=['lon','lat','inds']
+    df=df.drop(col_drop,axis='columns')
+    df.set_index('time', inplace=True)
+    df=df.resample('h').asfreq()
+    df=df.reset_index()
+    return df
+def calculate_correlation(x,y):
+    x_mean = x.mean()
+    y_mean = y.mean()
+    covariance = ((x - x_mean) * (y - y_mean)).mean()
+    x_var = ((x - x_mean) ** 2).mean()
+    y_var = ((y - y_mean) ** 2).mean()
+    x_std = x_var ** 0.5
+    y_std = y_var ** 0.5
+    correlation = covariance / (x_std * y_std)
+    return correlation
+
+def calculate_RMSE(x,y):
+    X = x.values.reshape(-1,1)
+    linear=LinearRegression()
+    linear.fit(X,y)
+    a=linear.coef_[0]
+    b=linear.intercept_
+    y_estimated=(a*x+b)
+    y_rmse=(y-y_estimated)**2
+    RMSE=(y_rmse.mean())**0.5
+    return RMSE
+
+def linear_regression_line(x,y,fig):
+    X = x.values.reshape(-1,1)
+    linear=LinearRegression()
+    linear.fit(X,y)
+    x_range=np.linspace(0,np.ceil(X.max()),100)
+    y_range=linear.predict(x_range.reshape(-1,1))
+    fig.add_traces(go.Scatter(x=x_range.flatten(), y=y_range.flatten(), mode='lines', name='Linear regression',visible=True))
+    return fig
+
+def draw_scatter_mapbox(lat,lon,lat_ind,lon_ind):
+    fig=go.Figure(go.Scattermapbox(
+        lat=lat,
+        lon=lon,
+        mode='markers',
+        marker=dict(size=12, color=['yellow' if lat_i == lat_ind and lon_i == lon_ind else 'darkred' for lat_i, lon_i in zip(lat, lon)]),
+    ))
+    fig.update_layout(
+        mapbox=dict(
+            style='carto-positron',
+            center=dict(lat=lat_ind,lon=lon_ind),
+            zoom=8
+        )
+    )
+    return fig
+
+
+def draw_plotly_graph_spectra1d(freq,spec,dirm,spr):
+    fig=make_subplots(specs=[[{'secondary_y':True}]])
+    fig.add_trace(
+        go.Scatter(x=freq,y=spec,mode='lines',name='Spec (m<sup>2</sup>s)'),
+        secondary_y=False
+        )
+    if dirm is not None:
+        fig.add_trace(
+            go.Scatter(x=freq,y=dirm,name='dirm (deg)', mode='lines',
+            line = dict(color='green')),
+            secondary_y=True
+        )
+        if spr is not None:
+            fig.add_trace(
+                go.Scatter(x=freq,y=dirm-spr,name='spr- (deg)',
+                line = dict(color='red', dash='dash')),
+                secondary_y=True
+            )
+            fig.add_trace(
+                go.Scatter(x=freq,y=dirm+spr,name='spr+ (deg)',
+                line = dict(color='red', dash='dash')),
+                secondary_y=True
+            )
+    fig.update_yaxes(secondary_y=True, showgrid=False)
+    return fig
+
+
+
+def draw_plotly_graph_spectra(freq, spec, dirs,cmax,cmin):
+    
+    fig = go.Figure(go.Barpolar(
+        r=freq.repeat(len(dirs)),  
+        theta=np.tile(dirs, len(freq)),  
+        width=[14.7] * len(np.tile(dirs, len(freq))),
+        marker=dict(
+            color=spec.flatten(),
+            colorscale='Blues',
+            cmin=cmin,
+            cmax=cmax,
+            colorbar=dict(
+                title='m<sup>2</sup>s',
+                ticks='outside',
+                len=0.75,
+            ),
+        )
+    ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                tickmode='array',
+                tickvals=[0, 1, 2, 3, 4, 5],
+                ticktext=[0, 0.1, 0.2, 0.3, 0.4, 0.5]
+            ),
+            angularaxis=dict(
+                visible=True,
+                rotation=90,
+                direction='clockwise'
+            )
+        ),
+    )
+    return fig
+
+
+
+
 def waveseries_plotter_basic(model: ModelRun):
     ts = model.waveseries()
-    var = ts.ds().to_dataframe()
-    var=var.reset_index()
-    drop=['lon','lat','inds']
-    var= var.drop(drop,axis='columns')
-
+    var=xarray_to_dataframe(ts)
     fig = go.Figure()
 
     variables = [col for col in var.columns if col != 'time']
@@ -40,10 +159,7 @@ def waveseries_plotter_basic(model: ModelRun):
 
 def waveseries_plotter_dash(model: ModelRun):
     ts = model.waveseries()
-    var = ts.ds().to_dataframe()
-    var=var.reset_index()
-    drop=['lon','lat','inds']
-    var= var.drop(drop,axis='columns')
+    var=xarray_to_dataframe(ts)
     app = Dash(__name__)
     app.layout = html.Div([
         html.H1(id="title", style={'textAlign': 'center'}),
@@ -114,86 +230,7 @@ def waveseries_plotter(model: ModelRun, use_dash: bool):
             waveseries_plotter_basic(model)
 
 
-def draw_scatter_mapbox(lat,lon,lat_ind,lon_ind):
-    fig=go.Figure(go.Scattermapbox(
-        lat=lat,
-        lon=lon,
-        mode='markers',
-        marker=dict(size=12, color=['yellow' if lat_i == lat_ind and lon_i == lon_ind else 'darkred' for lat_i, lon_i in zip(lat, lon)]),
-    ))
-    fig.update_layout(
-        mapbox=dict(
-            style='carto-positron',
-            center=dict(lat=lat_ind,lon=lon_ind),
-            zoom=8
-        )
-    )
-    return fig
 
-def draw_plotly_graph_spectra1d(freq,spec,dirm,spr):
-    fig=make_subplots(specs=[[{'secondary_y':True}]])
-    fig.add_trace(
-        go.Scatter(x=freq,y=spec,mode='lines',name='Spec (m<sup>2</sup>s)'),
-        secondary_y=False
-        )
-    if dirm is not None:
-        fig.add_trace(
-            go.Scatter(x=freq,y=dirm,name='dirm (deg)', mode='lines',
-            line = dict(color='green')),
-            secondary_y=True
-        )
-        if spr is not None:
-            fig.add_trace(
-                go.Scatter(x=freq,y=dirm-spr,name='spr- (deg)',
-                line = dict(color='red', dash='dash')),
-                secondary_y=True
-            )
-            fig.add_trace(
-                go.Scatter(x=freq,y=dirm+spr,name='spr+ (deg)',
-                line = dict(color='red', dash='dash')),
-                secondary_y=True
-            )
-    fig.update_yaxes(secondary_y=True, showgrid=False)
-    return fig
-
-
-
-def draw_plotly_graph_spectra(freq, spec, dirs,cmax,cmin):
-    
-    fig = go.Figure(go.Barpolar(
-        r=freq.repeat(len(dirs)),  
-        theta=np.tile(dirs, len(freq)),  
-        width=[14.7] * len(np.tile(dirs, len(freq))),
-        marker=dict(
-            color=spec.flatten(),
-            colorscale='Blues',
-            cmin=cmin,
-            cmax=cmax,
-            colorbar=dict(
-                title='m<sup>2</sup>s',
-                ticks='outside',
-                len=0.75,
-            ),
-            #cmin=global_min,
-            #cmax=global_max,
-        )
-    ))
-    
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                tickmode='array',
-                tickvals=[0, 1, 2, 3, 4, 5],
-                ticktext=[0, 0.1, 0.2, 0.3, 0.4, 0.5]
-            ),
-            angularaxis=dict(
-                visible=True,
-                rotation=90,
-                direction='clockwise'
-            )
-        ),
-    )
-    return fig
 def spectra_plotter(model: ModelRun):
     spectra=model.spectra()
     spectra1d = model.spectra1d()
@@ -257,7 +294,7 @@ def spectra_plotter(model: ModelRun):
         [Input("time_slider", "value"),
          Input("inds_slider", "value")],
     )
-    def display_spectra1d(time_r, inds_r):
+    def display_spectra(time_r, inds_r):
         selected_time_df = time_df[time_df["hour"] == time_r]
         spec1=spectra.spec()[:, inds_r, :, :].flatten()
         spec1d=spectra1d.spec()[:, inds_r, :].flatten()
@@ -424,46 +461,6 @@ def spectra1d_plotter(model: ModelRun):
     app.run_server(debug=True, port=2934)
 
 
-
-def xarray_to_dataframe(model) -> pd.DataFrame:
-    df=model.ds().to_dataframe()
-    df=df.reset_index()
-    col_drop=['lon','lat','inds']
-    df=df.drop(col_drop,axis='columns')
-    df.set_index('time', inplace=True)
-    df=df.resample('h').asfreq()
-    df=df.reset_index()
-    return df
-def calculate_correlation(x,y):
-    x_mean = x.mean()
-    y_mean = y.mean()
-    covariance = ((x - x_mean) * (y - y_mean)).mean()
-    x_var = ((x - x_mean) ** 2).mean()
-    y_var = ((y - y_mean) ** 2).mean()
-    x_std = x_var ** 0.5
-    y_std = y_var ** 0.5
-    correlation = covariance / (x_std * y_std)
-    return correlation
-
-def calculate_RMSE(x,y):
-    X = x.values.reshape(-1,1)
-    linear=LinearRegression()
-    linear.fit(X,y)
-    a=linear.coef_[0]
-    b=linear.intercept_
-    y_estimated=(a*x+b)
-    y_rmse=(y-y_estimated)**2
-    RMSE=(y_rmse.mean())**0.5
-    return RMSE
-
-def linear_regression_line(x,y,fig):
-    X = x.values.reshape(-1,1)
-    linear=LinearRegression()
-    linear.fit(X,y)
-    x_range=np.linspace(0,np.ceil(X.max()),100)
-    y_range=linear.predict(x_range.reshape(-1,1))
-    fig.add_traces(go.Scatter(x=x_range.flatten(), y=y_range.flatten(), mode='lines', name='Linear regression',visible=True))
-    return fig
 
 def scatter_plotter(model: ModelRun, model1:ModelRun):
     ds_model=model.waveseries()
