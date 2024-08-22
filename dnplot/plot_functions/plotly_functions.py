@@ -379,7 +379,7 @@ def spectra_plotter(model: ModelRun):
             )
         )
         title = f"{spectra.time(datetime=False)[selected_time_df.index[0]]} {spectra.name}"
-        smaller_title = f"Latitude={spectra1d.lat()[inds_r]:.4f} Longitude={spectra1d.lon()[inds_r]:.4f}"
+        smaller_title = f"Latitude={spectra.lat()[inds_r]:.4f} Longitude={spectra.lon()[inds_r]:.4f}"
         
         return title, smaller_title, fig_left, fig_right, fig_right2
     def open_browser():
