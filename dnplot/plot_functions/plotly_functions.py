@@ -160,6 +160,8 @@ def waveseries_plotter_basic(model: ModelRun):
 def waveseries_plotter_dash(model: ModelRun):
     ts = model.waveseries()
     var=xarray_to_dataframe(ts)
+    var_loc=ts.ds().to_dataframe()
+
     app = Dash(__name__)
     app.layout = html.Div([
         html.H1(id="title", style={'textAlign': 'center'}),
@@ -183,39 +185,64 @@ def waveseries_plotter_dash(model: ModelRun):
             clearable=False,
             style={'width': '30%'},
         ),
-        dcc.Graph(id="waveseries_chart"),
+        html.Div([
+            dcc.Graph(id="waveseries_chart"),
+        ],style={'display': 'flex', 'flexDirection': 'column', 'width': '75', 'float': 'left'}),
+        html.Div([
+            dcc.Graph(id="map")
+        ],style={'display': 'flex', 'flexDirection': 'column', 'width': '25%', 'float': 'right'}),
+
     ])
 
     @app.callback(
-        Output("waveseries_chart", "figure"), 
+        Output("waveseries_chart", "figure"),
         Output('title','children'),
+        Output("map", "figure"),
         Input("waveseries-1", "value"), 
         Input("waveseries-2", "value")
     )
-    def display_time_series(ticker1, ticker2):
+    def display_time_series(var1, var2):
         subfig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig = px.line(var, x='time', y=ticker1)
+        fig = px.line(var, x='time', y=var1)
         subfig.add_trace(fig.data[0], secondary_y=False)
-        if ticker2 != "None":
-            fig2 = px.line(var, x='time', y=ticker2)
+        if var2 != "None":
+            fig2 = px.line(var, x='time', y=var2)
             subfig.add_trace(fig2.data[0], secondary_y=True)
             subfig.update_traces(line_color='blue', secondary_y=False)
             subfig.update_traces(line_color='red', secondary_y=True)
             subfig.update_xaxes(minor=dict(ticks="inside", showgrid=True))
             subfig.update_yaxes(secondary_y=True, showgrid=False)
-            subfig.update_layout(xaxis_title="UTC", yaxis_title=ticker1)
-            subfig.update_yaxes(title_text=ticker2, secondary_y=True)
+            subfig.update_layout(xaxis_title="UTC", yaxis_title=var1)
+            subfig.update_yaxes(title_text=var2, secondary_y=True)
         else:
-            subfig.update_layout(xaxis_title="UTC", yaxis_title=ticker1)
+            subfig.update_layout(xaxis_title="UTC", yaxis_title=var1)
         subfig.update_layout(
-            width=1800,
+            width=1300,
             height=900,
             margin=dict(
-                l=100,r=0,t=100,b=100
+                l=0,r=0,t=50,b=50
             ),
         )
+        fig=go.Figure(go.Scattermapbox(
+            lat=np.array([var_loc['lat'].reset_index()['lat'][0]]),
+            lon=np.array([var_loc['lon'].reset_index()['lon'][0]]),
+            mode='markers',
+            marker=dict(size=12),
+        ))
+        fig.update_layout(
+            mapbox=dict(
+                style='carto-positron',
+                center=dict(lat=var_loc['lat'].reset_index()['lat'][0],lon=var_loc['lon'].reset_index()['lon'][0]),
+                zoom=6,
+            ),
+            width=450,
+            height=850,
+            margin=dict(
+                l=0,r=0,t=50,b=50
+            )
+        )
         title = f"{ts.name} Waveseries"
-        return subfig, title
+        return subfig, title,fig
     def open_browser():
         if not os.environ.get("WERKZEUG_RUN_MAIN"):
             webbrowser.open_new('http://127.0.0.1:3095/')
