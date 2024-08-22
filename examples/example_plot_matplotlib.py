@@ -21,6 +21,8 @@ model.import_spectra()
 model.spectra_to_1d()
 
 plot = dnplot.Dnora(model)
+plot.grid()
+plot.wind()
 plot.spectra()
 plot.spectra1d()
 
@@ -32,7 +34,7 @@ point = dn.grid.Grid(lon=e39.waveseries().lon(), lat=e39.waveseries().lat())
 nora3 = dn.modelrun.NORA3(point, year=2019, month=3)
 nora3.import_spectra()
 nora3.spectra_to_waveseries()
-plot = dnplot.Dnora(model)
+plot = dnplot.Dnora(nora3, e39)
 plot.scatter()
 
 #plots a waveseries plot
