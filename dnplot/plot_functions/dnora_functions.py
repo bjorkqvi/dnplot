@@ -103,7 +103,7 @@ def spectra_plotter(fig_dict: dict, model: ModelRun) -> dict:
         )
 
         fig_dict["ax"].set_title(
-            f"{spectra.time(datetime=False)[sliders['time'].val]} {spectra.name}"
+            f"{spectra.time(datetime=False)[sliders['time'].val]} {spectra.name} \n Latitude={spectra.lat()[sliders['inds'].val]:.4f} Longitude={spectra.lon()[sliders['inds'].val]:.4f}"
         )
         figure_initialized = True
 
@@ -216,7 +216,7 @@ def spectra1d_plotter(fig_dict: dict, model: ModelRun) -> dict:
         )
 
         ax.set_ylim(0, np.max(spectra1d.spec()[:,sliders['inds'].val,:])*1.1)
-        ax.set_title(spectra1d.name, fontsize=16)
+        ax.set_title(f"{spectra1d.time(datetime=False)[sliders['time'].val]} {spectra1d.name} \n Latitude={spectra1d.lat()[sliders['inds'].val]:.4f} Longitude={spectra1d.lon()[sliders['inds'].val]:.4f}")
         ax.set_xlabel('Frequency')
         ax.set_ylabel(f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}", color='b')
         ax2.set_ylim(0, np.max(spectra1d.dirm())*1.1)
