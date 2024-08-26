@@ -437,15 +437,18 @@ def spectra1d_plotter(model: ModelRun):
             id='inds_slider',
         ),
         html.Div([
-            dcc.Graph(id="spectra1d_graph"),
-
-        ]),
+            dcc.Graph(id="spectra1d_graph")
+            ], style={'width': '50%', 'float': 'left'}),
+        html.Div([
+            dcc.Graph(id="spectra_map")
+        ], style={'width': '45%', 'float': 'right'})
     ])
     
     @app.callback(
         [Output('title','children'),
          Output('smaller_title', 'children'),
-         Output("spectra1d_graph", "figure")],
+         Output("spectra1d_graph", "figure"),
+         Output('spectra_map','figure')],
         [Input("time_slider", "value"),
          Input("inds_slider", "value")],
     )
@@ -470,15 +473,29 @@ def spectra1d_plotter(model: ModelRun):
                 side='right',
                 range=[0,(np.max(spectra1d.dirm())*1.1)],
             ),
-            width=1800,
+            width=1000,
             height=800,
             margin=dict(
                 l=0,r=0,t=20,b=0
             )
         )
+        fig1=draw_scatter_mapbox(
+            lat=spectra1d.lat(),
+            lon=spectra1d.lon(),
+            lat_ind=spectra1d.lat()[inds_r],
+            lon_ind=spectra1d.lon()[inds_r]
+            )
+        fig1.update_layout(
+            width=700,
+            height=800,
+            margin=dict(
+                l=50,r=0,t=10,b=50
+            )
+        )
+
         title = f"{spectra1d.time(datetime=False)[selected_time_df.index[0]]} {spectra1d.name}"
         smaller_title = f"Latitude={spectra1d.lat()[inds_r]:.4f} Longitude={spectra1d.lon()[inds_r]:.4f}"
-        return title, smaller_title, fig,
+        return title, smaller_title, fig, fig1
     
     def open_browser():
         if not os.environ.get("WERKZEUG_RUN_MAIN"):
