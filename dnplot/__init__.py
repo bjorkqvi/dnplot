@@ -1,3 +1,1 @@
-from .plotters.plotters import Dnora
-from .plotters.plotters import Plotly
-from .plotters.plotters import Plotly1
+from .plotters.plotters import Dnora, Dnora1, Plotly, Plotly1
