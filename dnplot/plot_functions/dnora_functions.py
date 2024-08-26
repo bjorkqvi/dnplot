@@ -137,8 +137,7 @@ def spectra_plotter(fig_dict: dict, model: ModelRun) -> dict:
 
     return fig_dict
 
-def waveseries_plotter(fig_dict: dict, model: ModelRun):
-    var = fig_dict['var']
+def waveseries_plotter(model: ModelRun, var: list[str]):
     ts = model.waveseries()
     if len(var) < 4:
         fig, axes = plt.subplots(len(var), 1)

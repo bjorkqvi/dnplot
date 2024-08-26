@@ -39,11 +39,8 @@ class Dnora:
         fig_dict = plotter(fig_dict, self.model)
         fig_dict.get("fig").show()
 
-    def waveseries(self, var, plotter: Callable = dnora_functions.waveseries_plotter):
-        #fig, ax = plt.subplots(1)
-        fig_dict = { "var": var}
-        fig_dict = plotter(fig_dict, self.model)
-        #fig_dict.get("fig").show()  
+    def waveseries(self, var=['hs',('tm01','tm02'),'dirm'], plotter: Callable = dnora_functions.waveseries_plotter):
+        fig_dict = plotter(self.model, var)
 
     def spectra1d(self, plotter: Callable = dnora_functions.spectra1d_plotter):
         fig, ax = plt.subplots()
