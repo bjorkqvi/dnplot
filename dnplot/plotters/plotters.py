@@ -91,11 +91,3 @@ class Plotly1:
 
     def scatter(self, plotter: Callable = plotly_functions.scatter_plotter):
         fig_dict = plotter(self.model, self.model1)
-
-    def scatter(
-        self, var=["hs", "dirm"], plotter: Callable = dnora_functions.scatter_plotter
-    ):
-        fig, ax = plt.subplots()
-        fig_dict = {"fig": fig, "ax": ax}
-        fig_dict = plotter(fig_dict, self.model, var)
-        fig_dict.get("fig").show()
