@@ -160,7 +160,6 @@ def waveseries_plotter_basic(model: ModelRun):
 def waveseries_plotter_dash(model: ModelRun):
     ts = model.waveseries()
     var=xarray_to_dataframe(ts)
-    var_loc=ts.ds().to_dataframe()
 
     app = Dash(__name__)
     app.layout = html.Div([
@@ -224,15 +223,15 @@ def waveseries_plotter_dash(model: ModelRun):
             ),
         )
         fig=go.Figure(go.Scattermapbox(
-            lat=np.array([var_loc['lat'].reset_index()['lat'][0]]),
-            lon=np.array([var_loc['lon'].reset_index()['lon'][0]]),
+            lat=ts.lat(),
+            lon=ts.lon(),
             mode='markers',
             marker=dict(size=12),
         ))
         fig.update_layout(
             mapbox=dict(
                 style='carto-positron',
-                center=dict(lat=var_loc['lat'].reset_index()['lat'][0],lon=var_loc['lon'].reset_index()['lon'][0]),
+                center=dict(lat=int(ts.lat()),lon=int(ts.lon())),
                 zoom=6,
             ),
             width=450,
