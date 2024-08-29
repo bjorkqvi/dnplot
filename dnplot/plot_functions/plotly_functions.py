@@ -2,7 +2,6 @@ from __future__ import annotations
 from dash import Dash, dcc, html, Input, Output
 from plotly.subplots import make_subplots
 import plotly.express as px
-import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
@@ -11,6 +10,8 @@ from scipy.stats import gaussian_kde
 import os
 from threading import Timer
 import webbrowser
+import random
+from flask import Flask
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -136,7 +137,9 @@ def draw_plotly_graph_spectra(freq, spec, dirs,cmax,cmin):
     )
     return fig
 
-
+def open_browser(port):
+        if not os.environ.get("WERKZEUG_RUN_MAIN"):
+            webbrowser.open_new(f'http://127.0.0.1:{port}/')
 
 
 def waveseries_plotter_basic(model: ModelRun):
@@ -242,12 +245,9 @@ def waveseries_plotter_dash(model: ModelRun):
         )
         title = f"{ts.name} Waveseries"
         return subfig, title,fig
-    def open_browser():
-        if not os.environ.get("WERKZEUG_RUN_MAIN"):
-            webbrowser.open_new('http://127.0.0.1:3095/')
-
-    Timer(1, open_browser).start()
-    app.run_server(debug=True, port=3095)
+    port = random.randint(1000, 9999)
+    Timer(1, open_browser, args=[port]).start()
+    app.run_server(debug=True, port=port)
 
 def waveseries_plotter(model: ModelRun, use_dash: bool):
         if use_dash:
@@ -381,12 +381,9 @@ def spectra_plotter(model: ModelRun):
         smaller_title = f"Latitude={spectra.lat()[inds_r]:.4f} Longitude={spectra.lon()[inds_r]:.4f}"
         
         return title, smaller_title, fig_left, fig_right, fig_right2
-    def open_browser():
-        if not os.environ.get("WERKZEUG_RUN_MAIN"):
-            webbrowser.open_new('http://127.0.0.1:3045/')
-
-    Timer(1, open_browser).start()
-    app.run_server(debug=True, port=3045)
+    port = random.randint(1000, 9999)
+    Timer(1, open_browser, args=[port]).start()
+    app.run_server(debug=True, port=port)
 
 
 def spectra1d_plotter(model: ModelRun):
@@ -496,12 +493,9 @@ def spectra1d_plotter(model: ModelRun):
         smaller_title = f"Latitude={spectra1d.lat()[inds_r]:.4f} Longitude={spectra1d.lon()[inds_r]:.4f}"
         return title, smaller_title, fig, fig1
     
-    def open_browser():
-        if not os.environ.get("WERKZEUG_RUN_MAIN"):
-            webbrowser.open_new('http://127.0.0.1:2934/')
-
-    Timer(1, open_browser).start()
-    app.run_server(debug=True, port=2934)
+    port = random.randint(1000, 9999)
+    Timer(1, open_browser, args=[port]).start()
+    app.run_server(debug=True, port=port)
 
 
 
@@ -629,9 +623,6 @@ def scatter_plotter(model: ModelRun, model1:ModelRun):
         )
         return fig
     
-    def open_browser():
-        if not os.environ.get("WERKZEUG_RUN_MAIN"):
-            webbrowser.open_new('http://127.0.0.1:1222/')
-
-    Timer(1, open_browser).start()
-    app.run_server(debug=True, port=1222)
+    port = random.randint(1000, 9999)
+    Timer(1, open_browser, args=[port]).start()
+    app.run_server(debug=True, port=port)
