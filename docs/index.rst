@@ -11,6 +11,7 @@ Import dnora and dnplot
     import dnora as dn
     import dnplot
 
+
 Example for the wind, grid, spectra, spectra1d
 ===============================================
 
@@ -50,7 +51,7 @@ Wind plot
     plot.wind()
 
 
-.. image:: files/wind_plt.gif
+.. image:: files/wind_plt.png
     :width: 500
 
 
@@ -78,6 +79,7 @@ Spectra1D Plot
     :width: 500
 
 
+
 Example for the scatter plot
 =============================
 
@@ -97,13 +99,14 @@ Example for the scatter plot
 Scatter Plot 
 ------------
 
-.. code-block::python
+.. code-block:: python
 
     plot.scatter(['hs','hs'])
 
 
-.. image::files/scatter_plt.png
+.. image:: files/scatter_plt.png
     :width: 500
+
 
 
 Example for the waveseries plot
@@ -144,6 +147,8 @@ Waveseries when variables are more than 3:
 
 .. image:: files/waveseries_plt4.png
     :width: 500
+
+
 
 
 Plots using Plotly library
