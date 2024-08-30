@@ -247,7 +247,7 @@ or without them by setting use_dash=False.
 
 Waveseries use_dash=True:
 
-.. image:: files/waveseries_plotly2.png
+.. image:: files/waveseries_plotly.png
     :width: 500
 
 Waveseries use_dash=False:
