@@ -1,10 +1,10 @@
-Welcome to dnplot's documentation!
-=================================
+elcome to dnplot's Documentation!
+==================================
 
-**dnplot** is a Python package (under development) that creates various types of plots using the Matplotlib and Plotly libraries.
+**dnplot** is a Python package designed for visualizing `dnora <https://github.com/MET-OM/dnora>`_ objects, including 🌬️ wind, 🌊 waves, and ocean currents. 
+This package supports various plot types utilizing the `matplotlib <https://matplotlib.org/>`_ and `plotly <https://plotly.com/>`_ libraries.
 
-
-Import dnora and dnplot
+To get started, import `dnora` and `dnplot`:
 
 .. code-block:: python
 
