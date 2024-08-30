@@ -5,7 +5,7 @@
 ![dnplot Visualization](https://github.com/bjorkqvi/dnplot/blob/doc/docs/files/spectra_plotly.gif)
 
 
-## 🚀 Quick Installation 
+## Quick Installation 🚀 
 
 Ready to dive in? You can easily install **dnplot** using pip:
 
