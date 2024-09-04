@@ -1,14 +1,9 @@
-from __future__ import annotations
 import numpy as np
 from ..defaults import default_markers
 import matplotlib.tri as mtri
 from cartopy import feature as cfeature
 
-from typing import Optional, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from dnora.grid import Grid
-    from dnora.modelrun import ModelRun
+from typing import Optional
 
 
 def draw_gridded_magnitude(
@@ -54,7 +49,7 @@ def draw_gridded_magnitude(
 
 def draw_masked_points(
     fig_dict: dict,
-    grid: Grid,
+    grid,
     masks_to_plot: list[str],
     default_dict: dict = default_markers.get("generic_masks"),
 ):
@@ -77,23 +72,23 @@ def draw_masked_points(
 
 def draw_object_points(
     fig_dict: dict,
-    model: ModelRun,
+    model,
     objects_to_plot: list[str],
     default_dict: dict = default_markers.get("generic_objects"),
 ):
     """Plots points og objects to the plot"""
     for obj_type in objects_to_plot:
         markers = dict(default_dict)
-        markers.update(default_markers.get(obj_type.name.lower(), default_dict))
+        markers.update(default_markers.get(obj_type, default_dict))
 
-        if model[obj_type] is not None:
+        if model.get(obj_type) is not None:
             x, y = model[obj_type].xy(native=True)
             fig_dict.get("ax").plot(
                 x,
                 y,
                 markers.get("marker") + markers.get("color"),
                 markersize=markers.get("size"),
-                label="Imported " + obj_type.name.lower(),
+                label="Imported " + obj_type,
             )
 
     return fig_dict
@@ -214,17 +209,18 @@ def draw_polar_spectra(fig_dict, spec, freq, dirs) -> dict:
     #     fig_dict['cax'] = cax
     return fig_dict
 
+
 def draw_graph_spectra1d(fig_dict, spec, freq, dirm, spr) -> dict:
     fig = fig_dict.get("fig")
     ax = fig_dict.get("ax")
-    ax2 = fig_dict.get('ax2')
-    ax.plot(freq, spec, color='blue', label='Spec ($m^2s$)', linewidth=2.5)
+    ax2 = fig_dict.get("ax2")
+    ax.plot(freq, spec, color="blue", label="Spec ($m^2s$)", linewidth=2.5)
     if dirm is not None:
-        ax2.plot(freq,dirm,color='g', label='dirm (deg)' )
+        ax2.plot(freq, dirm, color="g", label="dirm (deg)")
         if spr is not None:
-            ax2.plot(freq, dirm-spr, color='red', ls='dashed', label='Spr (deg)')
-            ax2.plot(freq, dirm+spr, color='red', ls='dashed')
+            ax2.plot(freq, dirm - spr, color="red", ls="dashed", label="Spr (deg)")
+            ax2.plot(freq, dirm + spr, color="red", ls="dashed")
     lines1, labels1 = ax.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    ax2.legend(lines1+lines2,labels1+labels2)
+    ax2.legend(lines1 + lines2, labels1 + labels2)
     return fig_dict
