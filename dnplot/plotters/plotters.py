@@ -71,8 +71,9 @@ class Matplotlib1:
 
 
 class Plotly:
-    def __init__(self, model):
+    def __init__(self, model, model2=None):
         self.model = model
+        self.model2 = model2 or model
 
     def waveseries(
         self, use_dash, plotter: Callable = plotly_functions.waveseries_plotter
@@ -82,14 +83,5 @@ class Plotly:
     def spectra(self, plotter: Callable = plotly_functions.spectra_plotter):
         fig_dict = plotter(self.model)
 
-    def spectra1d(self, plotter: Callable = plotly_functions.spectra1d_plotter):
-        fig_dict = plotter(self.model)
-
-
-class Plotly1:
-    def __init__(self, model, model1):
-        self.model = model
-        self.model1 = model1
-
     def scatter(self, plotter: Callable = plotly_functions.scatter_plotter):
-        fig_dict = plotter(self.model, self.model1)
+        fig_dict = plotter(self.model, self.model2)

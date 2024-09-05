@@ -1,1 +1,1 @@
-from .plotters.plotters import Matplotlib, Matplotlib1, Plotly, Plotly1
+from .plotters.plotters import Matplotlib, Matplotlib1, Plotly
