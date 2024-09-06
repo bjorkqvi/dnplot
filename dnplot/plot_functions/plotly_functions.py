@@ -11,8 +11,6 @@ from threading import Timer
 import webbrowser
 import random
 from flask import Flask
-from typing import TYPE_CHECKING
-
 
 def xarray_to_dataframe(model) -> pd.DataFrame:
     df = model.ds().to_dataframe()
