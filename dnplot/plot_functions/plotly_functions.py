@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dash import Dash, dcc, html, Input, Output
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -14,8 +13,6 @@ import random
 from flask import Flask
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from dnora.modelrun import ModelRun
 
 def xarray_to_dataframe(model) -> pd.DataFrame:
     df=model.ds().to_dataframe()
@@ -142,7 +139,7 @@ def open_browser(port):
             webbrowser.open_new(f'http://127.0.0.1:{port}/')
 
 
-def waveseries_plotter_basic(model: ModelRun):
+def waveseries_plotter_basic(model):
     ts = model.waveseries()
     var=xarray_to_dataframe(ts)
     fig = go.Figure()
@@ -160,7 +157,7 @@ def waveseries_plotter_basic(model: ModelRun):
     )
     fig.show()
 
-def waveseries_plotter_dash(model: ModelRun):
+def waveseries_plotter_dash(model):
     ts = model.waveseries()
     var=xarray_to_dataframe(ts)
 
@@ -249,7 +246,7 @@ def waveseries_plotter_dash(model: ModelRun):
     Timer(1, open_browser, args=[port]).start()
     app.run_server(debug=True, port=port)
 
-def waveseries_plotter(model: ModelRun, use_dash: bool):
+def waveseries_plotter(model, use_dash: bool):
         if use_dash:
             waveseries_plotter_dash(model)
         else:
@@ -257,7 +254,7 @@ def waveseries_plotter(model: ModelRun, use_dash: bool):
 
 
 
-def spectra_plotter(model: ModelRun):
+def spectra_plotter(model):
     spectra=model.spectra()
     spectra1d = model.spectra1d()
     time = {
@@ -386,7 +383,7 @@ def spectra_plotter(model: ModelRun):
     app.run_server(debug=True, port=port)
 
 
-def spectra1d_plotter(model: ModelRun):
+def spectra1d_plotter(model):
     spectra1d = model.spectra1d()
 
     time = {
@@ -499,7 +496,7 @@ def spectra1d_plotter(model: ModelRun):
 
 
 
-def scatter_plotter(model: ModelRun, model1:ModelRun):
+def scatter_plotter(model, model1):
     ds_model=model.waveseries()
     ds1_model1=model1.waveseries()
     df_model=xarray_to_dataframe(model.waveseries())
