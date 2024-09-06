@@ -36,8 +36,7 @@ jobs:
         run: |
           conda activate test
           mamba install -c conda-forge flit
-          git ignore setup-miniconda-patched-environment.yml
-          git status
+          git status -uno
           flit build --format sdist
 
       - name: Upload wheels
