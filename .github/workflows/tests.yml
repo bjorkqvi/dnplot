@@ -36,6 +36,7 @@ jobs:
         run: |
           conda activate test
           mamba install -c conda-forge flit
+          git ignore setup-miniconda-patched-environment.yml
           git status
           flit build --format sdist
 
