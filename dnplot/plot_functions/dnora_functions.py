@@ -50,8 +50,8 @@ def wind_plotter(fig_dict: dict, model) -> dict:
             fig_dict,
             wind.x(native=True),
             wind.y(native=True),
-            wind.magnitude()[val, :, :],
-            vmax=np.max(wind.magnitude()),
+            wind.mag()[val, :, :],
+            vmax=np.max(wind.mag()),
             vmin=0,
             cmap=default_variable["ff"]["cmap"],
         )
