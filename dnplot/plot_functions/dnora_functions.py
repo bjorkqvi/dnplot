@@ -70,8 +70,8 @@ def wind_plotter(fig_dict: dict, model) -> dict:
         fig_dict["ax"].set_title(f"{wind.time(datetime=False)[val]} {wind.name}")
         figure_initialized = True
 
-    wind = model.wind()
-    grid = model.grid()
+    wind = model["wind"]
+    grid = model["grid"]
     figure_initialized = False
     if len(wind.time()) > 1:
         ax_slider = plt.axes([0.17, 0.05, 0.65, 0.03])
@@ -106,8 +106,8 @@ def spectra_plotter(fig_dict: dict, model) -> dict:
         )
         figure_initialized = True
 
-    spectra = model.spectra()
-    grid = model.grid()
+    spectra = model["spectra"]
+    grid = model["grid"]
     figure_initialized = False
     sliders = {}
     if len(spectra.time()) > 1:
@@ -133,7 +133,7 @@ def spectra_plotter(fig_dict: dict, model) -> dict:
 
 
 def waveseries_plotter(model, var: list[str]):
-    ts = model.waveseries()
+    ts = model["waveseries"]
     if len(var) < 4:
         fig, axes = plt.subplots(len(var), 1)
         fig.suptitle(ts.name, fontsize=16)
@@ -282,8 +282,8 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
         ax.grid()
         figure_initialized = True
 
-    spectra1d = model.spectra1d()
-    grid = model.grid()
+    spectra1d = model["spectra1d"]
+    grid = model["grid"]
     figure_initialized = False
     sliders = {}
     if len(spectra1d.time()) > 1:
@@ -304,7 +304,7 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
 
 
 def scatter_plotter(fig_dict: dict, model, var):
-    ts = model.waveseries()
+    ts = model["waveseries"]
     x = var[0]
     y = var[1]
     title = rf"$\bf{{{ts.name}}}$" + "\n" + rf"{x} vs {y}"

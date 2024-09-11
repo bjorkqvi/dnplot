@@ -12,6 +12,7 @@ import webbrowser
 import random
 from flask import Flask
 
+
 def xarray_to_dataframe(model) -> pd.DataFrame:
     df = model.ds().to_dataframe()
     df = df.reset_index()
@@ -168,7 +169,7 @@ def open_browser(port):
 
 
 def waveseries_plotter_basic(model):
-    ts = model.waveseries()
+    ts = model["waveseries"]
     var = xarray_to_dataframe(ts)
     fig = go.Figure()
 
@@ -189,7 +190,7 @@ def waveseries_plotter_basic(model):
 
 
 def waveseries_plotter_dash(model):
-    ts = model.waveseries()
+    ts = model["waveseries"]
     var = xarray_to_dataframe(ts)
 
     app = Dash(__name__)
@@ -550,10 +551,10 @@ def spectra1d_plotter(model):
 
 
 def scatter_plotter(model, model1):
-    ds_model = model.waveseries()
-    ds1_model1 = model1.waveseries()
-    df_model = xarray_to_dataframe(model.waveseries())
-    df1_model1 = xarray_to_dataframe(model1.waveseries())
+    ds_model = model["waveseries"]
+    ds1_model1 = model1["waveseries"]
+    df_model = xarray_to_dataframe(model["waveseries"])
+    df1_model1 = xarray_to_dataframe(model1["waveseries"])
 
     common_columns = list(set(df_model.columns).intersection(set(df1_model1.columns)))
     df = pd.merge(

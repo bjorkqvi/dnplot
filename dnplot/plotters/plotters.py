@@ -1,16 +1,12 @@
-from __future__ import annotations
 import matplotlib.pyplot as plt
 from cartopy import crs as ccrs
 from ..plot_functions import dnora_functions
 from ..plot_functions import plotly_functions
-from typing import TYPE_CHECKING, Callable
-
-if TYPE_CHECKING:
-    from dnora.modelrun import ModelRun
+from typing import Callable
 
 
 class Dnora:
-    def __init__(self, model: ModelRun):
+    def __init__(self, model):
         self.model = model
 
     def grid(self, plotter: Callable = dnora_functions.grid_plotter) -> None:
@@ -56,7 +52,7 @@ class Dnora:
 
 
 class Dnora1:
-    def __init__(self, model: ModelRun, model1: ModelRun):
+    def __init__(self, model, model1):
         self.model = model
         self.model1 = model1
 
@@ -69,7 +65,7 @@ class Dnora1:
 
 
 class Plotly:
-    def __init__(self, model: ModelRun):
+    def __init__(self, model):
         self.model = model
 
     def waveseries(
@@ -85,7 +81,7 @@ class Plotly:
 
 
 class Plotly1:
-    def __init__(self, model: ModelRun, model1: ModelRun):
+    def __init__(self, model, model1):
         self.model = model
         self.model1 = model1
 
