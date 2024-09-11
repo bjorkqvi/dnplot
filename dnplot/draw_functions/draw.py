@@ -84,7 +84,7 @@ def draw_object_points(
     """Plots points og objects to the plot"""
     for obj_type in objects_to_plot:
         markers = dict(default_dict)
-        markers.update(default_markers.get(obj_type.name.lower(), default_dict))
+        markers.update(default_markers.get(obj_type, default_dict))
 
         if model[obj_type] is not None:
             x, y = model[obj_type].xy(native=True)
@@ -93,7 +93,7 @@ def draw_object_points(
                 y,
                 markers.get("marker") + markers.get("color"),
                 markersize=markers.get("size"),
-                label="Imported " + obj_type.name.lower(),
+                label="Imported " + obj_type,
             )
 
     return fig_dict

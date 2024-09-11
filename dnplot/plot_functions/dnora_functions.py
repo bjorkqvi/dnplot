@@ -60,8 +60,8 @@ def wind_plotter(fig_dict: dict, model) -> dict:
             fig_dict,
             wind.x(native=True),
             wind.y(native=True),
-            wind.u()[val, :, :],
-            wind.v()[val, :, :],
+            wind.u(squeeze=False)[val, :, :],
+            wind.v(squeeze=False)[val, :, :],
         )
         # if not figure_initialized:
         #     masks_to_plot = ["output_mask"]
@@ -96,7 +96,7 @@ def spectra_plotter(fig_dict: dict, model) -> dict:
         nonlocal figure_initialized
         fig_dict = draw.draw_polar_spectra(
             fig_dict,
-            spectra.spec()[sliders["time"].val, sliders["inds"].val, :, :],
+            spectra.spec(squeeze=False)[sliders["time"].val, sliders["inds"].val, :, :],
             spectra.freq(),
             spectra.dirs(),
         )
@@ -248,13 +248,17 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
         dirm = None
         spr = None
         if spectra1d.dirm() is not None:
-            dirm = spectra1d.dirm()[sliders["time"].val, sliders["inds"].val, :]
+            dirm = spectra1d.dirm(squeeze=False)[
+                sliders["time"].val, sliders["inds"].val, :
+            ]
         if spectra1d.spr() is not None:
-            spr = spectra1d.spr()[sliders["time"].val, sliders["inds"].val, :]
+            spr = spectra1d.spr(squeeze=False)[
+                sliders["time"].val, sliders["inds"].val, :
+            ]
 
         fig_dict = draw.draw_graph_spectra1d(
             fig_dict,
-            spectra1d.spec()[sliders["time"].val, sliders["inds"].val, :],
+            spectra1d.spec(squeeze=False)[sliders["time"].val, sliders["inds"].val, :],
             spectra1d.freq(),
             dirm,
             spr,
