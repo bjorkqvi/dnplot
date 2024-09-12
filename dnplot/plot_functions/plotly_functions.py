@@ -170,15 +170,14 @@ def open_browser(port):
 
 def waveseries_plotter_basic(model):
     ts = model["waveseries"]
-    var = xarray_to_dataframe(ts)
     fig = go.Figure()
 
-    variables = [col for col in var.columns if col != "time"]
+    variables = [col for col in ts.core.data_vars()]
 
     for variable in variables:
         trace = go.Scatter(
-            x=var["time"],
-            y=var[variable],
+            x=ts.get("time"),
+            y=ts.get(variable),
             mode="lines",
             name=variable,
             visible="legendonly",
@@ -200,7 +199,7 @@ def waveseries_plotter_dash(model):
             html.P("Select variable:"),
             dcc.Dropdown(
                 id="waveseries-1",
-                options=[{"label": col, "value": col} for col in var if col != "time"],
+                options=[{"label": val, "value": val} for val in ts.core.data_vars()],
                 value="hs",
                 clearable=False,
                 style={"width": "30%"},
@@ -208,7 +207,7 @@ def waveseries_plotter_dash(model):
             dcc.Dropdown(
                 id="waveseries-2",
                 options=[{"label": "None", "value": "None"}]
-                + [{"label": col, "value": col} for col in var if col != "time"],
+                + [{"label": val, "value": val} for val in ts.core.data_vars()],
                 value="None",
                 clearable=False,
                 style={"width": "30%"},
