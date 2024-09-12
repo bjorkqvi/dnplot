@@ -86,7 +86,7 @@ def draw_object_points(
         markers = dict(default_dict)
         markers.update(default_markers.get(obj_type, default_dict))
 
-        if model[obj_type] is not None:
+        if model.get(obj_type) is not None:
             x, y = model[obj_type].xy(native=True)
             fig_dict.get("ax").plot(
                 x,
