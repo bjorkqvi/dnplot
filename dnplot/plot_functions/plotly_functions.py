@@ -295,32 +295,29 @@ def waveseries_plotter(model, use_dash: bool):
         waveseries_plotter_basic(model)
 
 
-def spectra_plotter(model):
-    spectra = model.spectra()
-    spectra1d = model.spectra1d()
-    time = {
-        "time": spectra.time(),
-    }
-    inds = {
-        "inds": spectra.inds(),
-    }
-    time_df = pd.DataFrame(time)
-    time_df["time"] = pd.to_datetime(time_df["time"])
-    time_df["hour"] = time_df["time"].dt.hour
-    inds_df = pd.DataFrame(inds)
+def create_spectra_app_layout(
+    len_of_inds: int, len_of_times: int, number_of_plots: int
+):
 
-    app = Dash(__name__)
-
-    app.layout = html.Div(
+    if number_of_plots == 1:
+        spectral_graphs = [dcc.Graph(id="primary_graph")]
+    elif number_of_plots == 2:
+        spectral_graphs = [
+            dcc.Graph(id="primary_graph"),
+            dcc.Graph(id="secondary_graph"),
+        ]
+    else:
+        raise ValueError("'number_of_plots' must be 1 or 2, not {number_of_plots}!")
+    return html.Div(
         [
             html.H1(id="title", style={"textAlign": "center"}),
             html.H2(id="smaller_title", style={"textAlign": "center"}),
             html.Label("time_index"),
             dcc.Slider(
-                min=time_df["hour"].min(),
-                max=time_df["hour"].max(),
+                min=0,
+                max=len_of_times - 1,
                 step=1,
-                value=time_df["hour"].min(),
+                value=0,
                 tooltip={"placement": "bottom", "always_visible": True},
                 updatemode="drag",
                 persistence=True,
@@ -329,10 +326,10 @@ def spectra_plotter(model):
             ),
             html.Label("inds_index"),
             dcc.Slider(
-                min=inds_df["inds"].min(),
-                max=inds_df["inds"].max(),
+                min=0,
+                max=len_of_inds - 1,
                 step=1,
-                value=inds_df["inds"].min(),
+                value=0,
                 tooltip={"placement": "bottom", "always_visible": True},
                 updatemode="drag",
                 persistence=True,
@@ -340,7 +337,7 @@ def spectra_plotter(model):
                 id="inds_slider",
             ),
             html.Div(
-                [dcc.Graph(id="spectra1d_graph"), dcc.Graph(id="spectra2d_graph")],
+                spectral_graphs,
                 style={
                     "display": "flex",
                     "flexDirection": "column",
@@ -354,195 +351,118 @@ def spectra_plotter(model):
         ]
     )
 
-    @app.callback(
-        [
-            Output("title", "children"),
-            Output("smaller_title", "children"),
-            Output("spectra1d_graph", "figure"),
-            Output("spectra_map", "figure"),
-            Output("spectra2d_graph", "figure"),
-        ],
-        [Input("time_slider", "value"), Input("inds_slider", "value")],
-    )
-    def display_spectra(time_r, inds_r):
-        selected_time_df = time_df[time_df["hour"] == time_r]
-        spec1 = spectra.spec()[:, inds_r, :, :].flatten()
-        spec1d = spectra1d.spec()[:, inds_r, :].flatten()
 
-        fig_right = draw_plotly_graph_spectra(
-            freq=spectra.freq(),
-            spec=spectra.spec()[selected_time_df.index[0], inds_r, :, :].flatten(),
-            dirs=spectra.dirs(),
-            cmin=np.min(spec1),
-            cmax=np.max(spec1),
-        )
-        fig_right.update_layout(
-            width=900,
-            height=900,
-            margin=dict(l=200, r=0, t=100, b=50),
-        )
-
-        fig_right2 = draw_scatter_mapbox(
-            lat=spectra.lat(),
-            lon=spectra.lon(),
-            lat_ind=spectra.lat()[inds_r],
-            lon_ind=spectra.lon()[inds_r],
-        )
-        fig_right2.update_layout(
-            width=1000, height=500, margin=dict(l=50, r=0, t=10, b=50)
-        )
-
-        fig_left = draw_plotly_graph_spectra1d(
-            freq=spectra1d.freq(),
-            spec=spectra1d.spec()[selected_time_df.index[0], inds_r, :],
-            dirm=(
-                spectra1d.dirm()[selected_time_df.index[0], inds_r, :]
-                if spectra1d.dirm() is not None
-                else None
-            ),
-            spr=(
-                spectra1d.spr()[selected_time_df.index[0], inds_r, :]
-                if spectra1d.spr() is not None
-                else None
-            ),
-        )
-        fig_left.update_layout(
-            xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
-            yaxis=dict(
-                title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
-                range=[0, np.max(spec1d) * 1.1],
-            ),
-            yaxis2=dict(
-                title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
-                overlaying="y",
-                side="right",
-                range=[0, np.max(spectra1d.dirm()) * 1.1],
-            ),
-            width=1000,
-            height=500,
-            margin=dict(l=100, r=0, t=100, b=50),
-        )
-        title = (
-            f"{spectra.time(datetime=False)[selected_time_df.index[0]]} {spectra.name}"
-        )
-        smaller_title = f"Latitude={spectra.lat()[inds_r]:.4f} Longitude={spectra.lon()[inds_r]:.4f}"
-
-        return title, smaller_title, fig_left, fig_right, fig_right2
-
-    port = random.randint(1000, 9999)
-    Timer(1, open_browser, args=[port]).start()
-    app.run_server(debug=False, port=port)
-
-
-def spectra1d_plotter(model):
+def spectra_plotter(model):
+    spectra = model.spectra()
     spectra1d = model.spectra1d()
 
-    time = {
-        "time": spectra1d.time(),
-    }
-    inds = {
-        "inds": spectra1d.inds(),
-    }
-    time_df = pd.DataFrame(time)
-    time_df["time"] = pd.to_datetime(time_df["time"])
-    time_df["hour"] = time_df["time"].dt.hour
+    number_of_plots = 0
+    if spectra1d is not None:
+        number_of_plots += 1
+        primary_object = "spectra1d"
 
-    inds_df = pd.DataFrame(inds)
+    if spectra is not None:
+        number_of_plots += 1
+        primary_object = "spectra"
+
+    lons, lats = model[primary_object].lonlat()
+    times = model[primary_object].time(datetime=False)
+    name = model[primary_object].name
 
     app = Dash(__name__)
 
-    app.layout = html.Div(
-        [
-            html.H1(id="title", style={"textAlign": "center"}),
-            html.H2(id="smaller_title", style={"textAlign": "center"}),
-            html.Label("time_index"),
-            dcc.Slider(
-                min=time_df["hour"].min(),
-                max=time_df["hour"].max(),
-                step=1,
-                value=time_df["hour"].min(),
-                tooltip={"placement": "bottom", "always_visible": True},
-                updatemode="drag",
-                persistence=True,
-                persistence_type="session",
-                id="time_slider",
-            ),
-            html.Label("inds_index"),
-            dcc.Slider(
-                min=inds_df["inds"].min(),
-                max=inds_df["inds"].max(),
-                step=1,
-                value=inds_df["inds"].min(),
-                tooltip={"placement": "bottom", "always_visible": True},
-                updatemode="drag",
-                persistence=True,
-                persistence_type="session",
-                id="inds_slider",
-            ),
-            html.Div(
-                [dcc.Graph(id="spectra1d_graph")],
-                style={"width": "50%", "float": "left"},
-            ),
-            html.Div(
-                [dcc.Graph(id="spectra_map")], style={"width": "45%", "float": "right"}
-            ),
-        ]
+    app.layout = create_spectra_app_layout(
+        len_of_inds=len(lons),
+        len_of_times=len(times),
+        number_of_plots=number_of_plots,
     )
+
+    outputs = [
+        Output("title", "children"),
+        Output("smaller_title", "children"),
+        Output("spectra_map", "figure"),
+        Output("primary_graph", "figure"),
+    ]
+    if number_of_plots == 2:
+        outputs.append(Output("secondary_graph", "figure"))
 
     @app.callback(
-        [
-            Output("title", "children"),
-            Output("smaller_title", "children"),
-            Output("spectra1d_graph", "figure"),
-            Output("spectra_map", "figure"),
-        ],
+        outputs,
         [Input("time_slider", "value"), Input("inds_slider", "value")],
     )
-    def display_spectra1d(time_r, inds_r):
-        selected_time_df = time_df[time_df["hour"] == time_r]
-        spec1d = spectra1d.spec()[:, inds_r, :].flatten()
+    def display_spectra(time_r, inds_r):
+        spectra_map = draw_scatter_mapbox(
+            lat=lats,
+            lon=lons,
+            lat_ind=lats[inds_r],
+            lon_ind=lons[inds_r],
+        )
+        spectra_map.update_layout(
+            width=800, height=800, margin=dict(l=50, r=0, t=10, b=50)
+        )
 
-        fig = draw_plotly_graph_spectra1d(
-            freq=spectra1d.freq(),
-            spec=spectra1d.spec()[selected_time_df.index[0], inds_r, :],
-            dirm=(
-                spectra1d.dirm()[selected_time_df.index[0], inds_r, :]
-                if spectra1d.dirm() is not None
-                else None
-            ),
-            spr=(
-                spectra1d.spr()[selected_time_df.index[0], inds_r, :]
-                if spectra1d.spr() is not None
-                else None
-            ),
-        )
-        fig.update_layout(
-            xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
-            yaxis=dict(
-                title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
-                range=[0, (np.max(spec1d) * 1.1)],
-            ),
-            yaxis2=dict(
-                title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
-                overlaying="y",
-                side="right",
-                range=[0, (np.max(spectra1d.dirm()) * 1.1)],
-            ),
-            width=1000,
-            height=800,
-            margin=dict(l=0, r=0, t=20, b=0),
-        )
-        fig1 = draw_scatter_mapbox(
-            lat=spectra1d.lat(),
-            lon=spectra1d.lon(),
-            lat_ind=spectra1d.lat()[inds_r],
-            lon_ind=spectra1d.lon()[inds_r],
-        )
-        fig1.update_layout(width=700, height=800, margin=dict(l=50, r=0, t=10, b=50))
+        graphs = {}
+        if spectra is not None:
+            spec1 = spectra.spec()[:, inds_r, :, :].flatten()
+            graphs["spectra"] = draw_plotly_graph_spectra(
+                freq=spectra.freq(),
+                spec=spectra.spec()[time_r, inds_r, :, :].flatten(),
+                dirs=spectra.dirs(),
+                cmin=np.min(spec1),
+                cmax=np.max(spec1),
+            )
+            graphs["spectra"].update_layout(
+                width=800,
+                height=800,
+                margin=dict(l=200, r=0, t=100, b=50),
+            )
 
-        title = f"{spectra1d.time(datetime=False)[selected_time_df.index[0]]} {spectra1d.name}"
-        smaller_title = f"Latitude={spectra1d.lat()[inds_r]:.4f} Longitude={spectra1d.lon()[inds_r]:.4f}"
-        return title, smaller_title, fig, fig1
+        if spectra1d is not None:
+            spec1d = spectra1d.spec()[:, inds_r, :].flatten()
+            graphs["spectra1d"] = draw_plotly_graph_spectra1d(
+                freq=spectra1d.freq(),
+                spec=spectra1d.spec()[time_r, inds_r, :],
+                dirm=(
+                    spectra1d.dirm()[time_r, inds_r, :]
+                    if spectra1d.dirm() is not None
+                    else None
+                ),
+                spr=(
+                    spectra1d.spr()[time_r, inds_r, :]
+                    if spectra1d.spr() is not None
+                    else None
+                ),
+            )
+            graphs["spectra1d"].update_layout(
+                xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
+                yaxis=dict(
+                    title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
+                    range=[0, np.max(spec1d) * 1.1],
+                ),
+                yaxis2=dict(
+                    title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
+                    overlaying="y",
+                    side="right",
+                    range=[0, np.max(spectra1d.dirm()) * 1.1],
+                ),
+                width=800,
+                height=500,
+                margin=dict(l=100, r=0, t=100, b=50),
+            )
+
+        title = f"{times[time_r]} {name}"
+        smaller_title = f"Latitude={lats[inds_r]:.4f} Longitude={lons[inds_r]:.4f}"
+
+        if number_of_plots == 1:
+            return title, smaller_title, spectra_map, graphs.get(primary_object)
+        else:
+            return (
+                title,
+                smaller_title,
+                spectra_map,
+                graphs.get("spectra"),
+                graphs.get("spectra1d"),
+            )
 
     port = random.randint(1000, 9999)
     Timer(1, open_browser, args=[port]).start()
