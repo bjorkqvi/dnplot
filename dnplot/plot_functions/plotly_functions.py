@@ -403,10 +403,10 @@ def spectra_plotter(model):
 
         graphs = {}
         if spectra is not None:
-            spec1 = spectra.spec()[:, inds_r, :, :].flatten()
+            spec1 = spectra.spec(squeeze=False)[:, inds_r, :, :].flatten()
             graphs["spectra"] = draw_plotly_graph_spectra(
                 freq=spectra.freq(),
-                spec=spectra.spec()[time_r, inds_r, :, :].flatten(),
+                spec=spectra.spec(squeeze=False)[time_r, inds_r, :, :].flatten(),
                 dirs=spectra.dirs(),
                 cmin=np.min(spec1),
                 cmax=np.max(spec1),
@@ -418,10 +418,10 @@ def spectra_plotter(model):
             )
 
         if spectra1d is not None:
-            spec1d = spectra1d.spec()[:, inds_r, :].flatten()
+            spec1d = spectra1d.spec(squeeze=False)[:, inds_r, :].flatten()
             graphs["spectra1d"] = draw_plotly_graph_spectra1d(
                 freq=spectra1d.freq(),
-                spec=spectra1d.spec()[time_r, inds_r, :],
+                spec=spectra1d.spec(squeeze=False)[time_r, inds_r, :],
                 dirm=(
                     spectra1d.dirm()[time_r, inds_r, :]
                     if spectra1d.dirm() is not None
