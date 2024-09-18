@@ -1,6 +1,6 @@
 [project]
 name = "dnplot"
-version = "0.2.1"
+version = "0.2.2"
 description = "Plotting of data imported by the DNORA package"
 authors = [ { name = "Konstantinos Christakos", email = "konstantinosc@met.no" } , { name = "Jan-Victor Björkqvist", email = "janvb@met.no" }, {name = "Dominykas Jasas", email = "dominykas.jasas@stud.vilniustech.lt"}]
 dependencies = [ "numpy", "matplotlib", "cartopy", "pandas" ,"plotly", "dash", "scipy", "cmocean", "scikit-learn" ]
