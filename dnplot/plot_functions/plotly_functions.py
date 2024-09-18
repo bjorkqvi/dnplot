@@ -423,12 +423,12 @@ def spectra_plotter(model):
                 freq=spectra1d.freq(),
                 spec=spectra1d.spec(squeeze=False)[time_r, inds_r, :],
                 dirm=(
-                    spectra1d.dirm()[time_r, inds_r, :]
+                    spectra1d.dirm(squeeze=False)[time_r, inds_r, :]
                     if spectra1d.dirm() is not None
                     else None
                 ),
                 spr=(
-                    spectra1d.spr()[time_r, inds_r, :]
+                    spectra1d.spr(squeeze=False)[time_r, inds_r, :]
                     if spectra1d.spr() is not None
                     else None
                 ),
