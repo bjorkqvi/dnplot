@@ -12,7 +12,7 @@ from scipy.stats import gaussian_kde
 
 def grid_plotter(fig_dict: dict, model) -> dict:
     """Plot the depth information and set output points etc."""
-    grid = model.grid()
+    grid = model.get("grid")
     fig_dict = draw.draw_gridded_magnitude(
         fig_dict,
         grid.x(native=True),
@@ -20,9 +20,10 @@ def grid_plotter(fig_dict: dict, model) -> dict:
         grid.topo(),
         cmap=default_variable["topo"]["cmap"],
     )
-    fig_dict = draw.draw_mask(
-        fig_dict, grid.x(native=True), grid.y(native=True), grid.land_mask()
-    )
+    if hasattr(grid, "land_mask"):
+        fig_dict = draw.draw_mask(
+            fig_dict, grid.x(native=True), grid.y(native=True), grid.land_mask()
+        )
 
     fig_dict["ax"].set_xlabel(grid.core.x_str)
     fig_dict["ax"].set_ylabel(grid.core.y_str)
