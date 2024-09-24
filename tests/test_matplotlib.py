@@ -1,6 +1,7 @@
 from dnplot import Matplotlib
 from geo_skeletons import GriddedSkeleton, PointSkeleton
-from geo_skeletons.decorators import add_datavar, add_mask
+from geo_skeletons.decorators import add_datavar, add_mask, add_magnitude, add_time
+import geo_parameters as gp
 
 
 def test_plot_topo():
@@ -60,3 +61,55 @@ def test_plot_grid():
     )
 
     plot.grid()
+
+
+def test_plot_wind():
+
+    @add_magnitude(gp.wind.Wind("mag"), x="u", y="v", direction=gp.wind.WindDir("dir"))
+    @add_datavar(name=gp.wind.YWind("v"), default_value=0.0)
+    @add_datavar(name=gp.wind.XWind("u"), default_value=0.0)
+    @add_time(grid_coord=True)
+    class Wind(GriddedSkeleton):
+        pass
+
+    wind = Wind(
+        lon=(0, 10), lat=(50, 60), time=("2020-01-01 00:00", "2020-01-01 03:00")
+    )
+    wind.set_spacing(nx=11, ny=21)
+    wind.set_u(5)
+    wind.set_v(10)
+
+    plot = Matplotlib(
+        {
+            "wind": wind,
+        }
+    )
+
+    plot.wind()
+
+
+def test_plot_current():
+
+    @add_magnitude(
+        gp.ocean.Current("mag"), x="u", y="v", direction=gp.ocean.CurrentDir("dir")
+    )
+    @add_datavar(name=gp.ocean.YCurrent("v"), default_value=0.0)
+    @add_datavar(name=gp.ocean.XCurrent("u"), default_value=0.0)
+    @add_time(grid_coord=True)
+    class Current(GriddedSkeleton):
+        pass
+
+    current = Current(
+        lon=(0, 10), lat=(50, 60), time=("2020-01-01 00:00", "2020-01-01 03:00")
+    )
+    current.set_spacing(nx=11, ny=21)
+    current.set_u(5)
+    current.set_v(10)
+
+    plot = Matplotlib(
+        {
+            "current": current,
+        }
+    )
+
+    plot.current()

@@ -102,7 +102,6 @@ def draw_mask(
     mask_to_plot: str,
 ) -> dict:
 
-    # xx, yy = np.meshgrid(x_vec, y_vec)
     xx = grid.longrid(native=True)
     yy = grid.latgrid(native=True)
     mask = grid.get(f"{mask_to_plot}_mask")

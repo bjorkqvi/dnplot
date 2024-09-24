@@ -48,6 +48,67 @@ def topo_plotter(fig_dict: dict, data_dict: dict, coastline: bool = True) -> dic
     return fig_dict
 
 
+def directional_data_plotter(fig_dict: dict, data_dict: dict, obj_type: str) -> dict:
+    def update_plot(val):
+        nonlocal fig_dict
+        nonlocal figure_initialized
+        fig_dict = draw.draw_gridded_magnitude(
+            fig_dict,
+            obj.x(native=True),
+            obj.y(native=True),
+            obj.mag(squeeze=False)[val, :, :],
+            vmax=np.max(obj.mag()),
+            vmin=0,
+            cmap=default_variable[obj_type]["cmap"],
+        )
+        fig_dict = draw.draw_coastline(fig_dict)
+        fig_dict = draw.draw_arrows(
+            fig_dict,
+            obj.x(native=True),
+            obj.y(native=True),
+            obj.u(squeeze=False)[val, :, :],
+            obj.v(squeeze=False)[val, :, :],
+        )
+        # if not figure_initialized:
+        #     masks_to_plot = ["output_mask"]
+        #     fig_dict = draw.draw_masked_points(fig_dict, grid, masks_to_plot=masks_to_plot)
+        #     fig_dict.get("ax").legend()
+        fig_dict["ax"].set_title(f"{obj.time(datetime=False)[val]} {obj.name}")
+        figure_initialized = True
+
+    obj = data_dict[obj_type]
+    # grid = data_dict["grid"]
+    figure_initialized = False
+    if len(obj.time()) > 1:
+        ax_slider = plt.axes([0.17, 0.05, 0.65, 0.03])
+        time_slider = Slider(
+            ax_slider, "time_index", 0, len(obj.time()) - 1, valinit=0, valstep=1
+        )
+        time_slider.on_changed(update_plot)
+
+    update_plot(0)
+    fig_dict["ax"].set_xlabel(obj.core.x_str)
+    fig_dict["ax"].set_ylabel(obj.core.y_str)
+
+    # Try to determine name and units
+    std_name = default_variable[obj_type].get("name")
+    unit = default_variable[obj_type].get("unit")
+
+    metaparam = obj.core.meta_parameter("mag")
+    if metaparam is not None:
+        std_name = std_name or metaparam.standard_name()
+        unit = unit or metaparam.unit()
+
+    std_name = std_name or obj_type
+    unit = unit or "?"
+
+    fig_dict["cbar"].set_label(f"{std_name} [{unit}]")
+
+    plt.show(block=True)
+
+    return fig_dict
+
+
 def wind_plotter(fig_dict: dict, data_dict: dict) -> dict:
     def update_plot(val):
         nonlocal fig_dict

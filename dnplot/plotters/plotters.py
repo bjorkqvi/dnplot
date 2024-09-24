@@ -32,7 +32,7 @@ class Matplotlib:
         fig_dict.get("ax").legend()
         fig_dict.get("fig").show()
 
-    def wind(self, plotter: Callable = matplotlib_functions.wind_plotter):
+    def wind(self, plotter: Callable = matplotlib_functions.directional_data_plotter):
         fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
         gl = ax.gridlines(
             crs=ccrs.PlateCarree(),
@@ -44,7 +44,24 @@ class Matplotlib:
         gl.top_labels = None
         gl.right_labels = None
         fig_dict = {"fig": fig, "ax": ax, "gl": gl}
-        fig_dict = plotter(fig_dict, self.data_dict)
+        fig_dict = plotter(fig_dict, self.data_dict, obj_type="wind")
+        fig_dict.get("fig").show()
+
+    def current(
+        self, plotter: Callable = matplotlib_functions.directional_data_plotter
+    ):
+        fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
+        gl = ax.gridlines(
+            crs=ccrs.PlateCarree(),
+            draw_labels=True,
+            color="gray",
+            alpha=0.5,
+            linestyle="--",
+        )
+        gl.top_labels = None
+        gl.right_labels = None
+        fig_dict = {"fig": fig, "ax": ax, "gl": gl}
+        fig_dict = plotter(fig_dict, self.data_dict, obj_type="current")
         fig_dict.get("fig").show()
 
     def spectra(self, plotter: Callable = matplotlib_functions.spectra_plotter):

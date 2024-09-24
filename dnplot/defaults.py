@@ -3,7 +3,8 @@ import cmocean.cm
 
 default_variable = {
     "hs": {"name": "Significant wave height", "unit": "m", "cmap": cmocean.cm.amp},
-    "ff": {"name": "Wind", "unit": "m/s", "cmap": cmocean.cm.tempo},
+    "wind": {"name": "Wind", "unit": "m/s", "cmap": cmocean.cm.tempo},
+    "current": {"name": "Current", "unit": "m/s", "cmap": cmocean.cm.tempo},
     "topo": {
         "name": "Topography",
         "unit": "m",
