@@ -13,11 +13,17 @@ default_variable = {
 }
 
 default_markers = {
+    # To have something to plot for all objects
     "generic_objects": {"marker": "x", "color": "m", "size": 2},
-    "generic_masks": {"marker": "*", "color": "m", "size": 2},
-    "spectra": {"marker": "x", "color": "k", "size": 5},
-    "wind": {"marker": ".", "color": "r", "size": 1},
-    "spectra1d": {"marker": "o", "color": "k", "size": 3},
-    "spectra_mask": {"marker": "*", "color": "r", "size": 7},
-    "output_mask": {"marker": "d", "color": "b", "size": 5},
+    "generic_points": {"marker": "*", "color": "m", "size": 2},
+    # These are objects that represent DNORA unstructured data
+    "spectra": {"marker": "x", "color": "k", "size": 7},
+    "waveseries": {"marker": "x", "color": "r", "size": 7},
+    # These are objects that represent DNORA gridded data
+    "wind": {"marker": ".", "color": "k", "size": 1},
+    "current": {"marker": ".", "color": "r", "size": 1},
+    "ice": {"marker": ".", "color": "b", "size": 1},
+    # These are points that correspond to boolean masks
+    "boundary_points": {"marker": "*", "color": "k", "size": 5},
+    "output_points": {"marker": "*", "color": "r", "size": 5},
 }

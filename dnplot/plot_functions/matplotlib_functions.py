@@ -10,9 +10,23 @@ from matplotlib import cm
 from scipy.stats import gaussian_kde
 
 
-def grid_plotter(fig_dict: dict, model) -> dict:
-    """Plot the depth information and set output points etc."""
-    grid = model.get("grid")
+def grid_plotter(fig_dict: dict, data_dict: dict) -> dict:
+    """Plot the depth information and land mask. Also plots information about e.g. wind data and spectral points"""
+    fig_dict = topo_plotter(fig_dict, data_dict, coastline=False)
+    fig_dict = draw.draw_masked_points(
+        fig_dict, data_dict.get("grid"), masks_to_plot=["boundary", "output"]
+    )
+    fig_dict = draw.draw_object_points(
+        fig_dict,
+        data_dict,
+        objects_to_plot=["wind", "current", "ice", "spectra", "waveseries"],
+    )
+    return fig_dict
+
+
+def topo_plotter(fig_dict: dict, data_dict: dict, coastline: bool = True) -> dict:
+    """Plot the depth information and land mask"""
+    grid = data_dict.get("grid")
     fig_dict = draw.draw_gridded_magnitude(
         fig_dict,
         grid.x(native=True),
@@ -20,30 +34,21 @@ def grid_plotter(fig_dict: dict, model) -> dict:
         grid.topo(),
         cmap=default_variable["topo"]["cmap"],
     )
-    if hasattr(grid, "land_mask"):
-        fig_dict = draw.draw_mask(
-            fig_dict, grid.x(native=True), grid.y(native=True), grid.land_mask()
-        )
+
+    fig_dict = draw.draw_mask(fig_dict, grid, mask_to_plot="land")
+
+    if coastline:
+        fig_dict = draw.draw_coastline(fig_dict)
 
     fig_dict["ax"].set_xlabel(grid.core.x_str)
     fig_dict["ax"].set_ylabel(grid.core.y_str)
     fig_dict["cbar"].set_label("Depth [m]")
     fig_dict["ax"].set_title(f"{grid.name} {grid.ds().attrs.get('source', '')}")
 
-    # masks_to_plot = ["spectra_mask", "output_mask"]
-    # fig_dict = draw.draw_masked_points(fig_dict, grid, masks_to_plot=masks_to_plot)
-
-    objects_to_plot = [
-        "wind",
-    ]
-    fig_dict = draw.draw_object_points(fig_dict, model, objects_to_plot=objects_to_plot)
-
-    fig_dict.get("ax").legend()
-
     return fig_dict
 
 
-def wind_plotter(fig_dict: dict, model) -> dict:
+def wind_plotter(fig_dict: dict, data_dict: dict) -> dict:
     def update_plot(val):
         nonlocal fig_dict
         nonlocal figure_initialized
@@ -51,7 +56,7 @@ def wind_plotter(fig_dict: dict, model) -> dict:
             fig_dict,
             wind.x(native=True),
             wind.y(native=True),
-            wind.mag()[val, :, :],
+            wind.mag(squeeze=False)[val, :, :],
             vmax=np.max(wind.mag()),
             vmin=0,
             cmap=default_variable["ff"]["cmap"],
@@ -71,8 +76,8 @@ def wind_plotter(fig_dict: dict, model) -> dict:
         fig_dict["ax"].set_title(f"{wind.time(datetime=False)[val]} {wind.name}")
         figure_initialized = True
 
-    wind = model["wind"]
-    grid = model["grid"]
+    wind = data_dict["wind"]
+    # grid = data_dict["grid"]
     figure_initialized = False
     if len(wind.time()) > 1:
         ax_slider = plt.axes([0.17, 0.05, 0.65, 0.03])

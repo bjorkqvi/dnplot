@@ -1,14 +1,8 @@
-from __future__ import annotations
 import numpy as np
 from ..defaults import default_markers
 import matplotlib.tri as mtri
 from cartopy import feature as cfeature
-
-from typing import Optional, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from dnora.grid import Grid
-    from dnora.modelrun import ModelRun
+from typing import Optional
 
 
 def draw_gridded_magnitude(
@@ -31,16 +25,15 @@ def draw_gridded_magnitude(
     if vmax is None:
         vmax = np.max(data)
 
-    # if vmax-vmin<20:
     levels = np.linspace(
-        np.floor(vmin), np.ceil(vmax), np.floor(vmax - vmin + 2).astype(int)
+        np.min(np.floor(vmin) - 1, 0),
+        np.ceil(vmax) + 1,
+        np.floor(vmax - vmin + 3).astype(int),
     )
-    # else:
-    #     levels = np.linspace(np.floor(vmin), np.ceil(vmax), 11)
-    xx, yy = np.meshgrid(x, y)
-    tri = mtri.Triangulation(xx.ravel(), yy.ravel())
 
     if len(levels) > 1 and not np.isclose(np.diff(levels)[0], 0):
+        xx, yy = np.meshgrid(x, y)
+        tri = mtri.Triangulation(xx.ravel(), yy.ravel())
         cont = ax.tricontourf(tri, data.ravel(), cmap=cmap, levels=levels)
     else:
         cont = ax.pcolor(x, y, data, cmap=cmap, label=label)
@@ -55,30 +48,34 @@ def draw_gridded_magnitude(
 
 def draw_masked_points(
     fig_dict: dict,
-    grid: Grid,
+    grid,
     masks_to_plot: list[str],
-    default_dict: dict = default_markers.get("generic_masks"),
+    default_dict: dict = default_markers.get("generic_points"),
 ):
     """Plots the masked points to the plot"""
+    if grid is None:
+        return fig_dict
     for mask in masks_to_plot:
         markers = dict(default_dict)
-        markers.update(default_markers.get(mask, default_dict))
+        markers.update(default_markers.get(f"{mask}_points", default_dict))
 
-        x, y = grid.xy(native=True, mask=grid.get(mask))
-        fig_dict.get("ax").plot(
-            x,
-            y,
-            markers.get("marker") + markers.get("color"),
-            markersize=markers.get("size"),
-            label="Set " + mask.split("_")[0] + " points",
-        )
+        if grid.get(f"{mask}_points") is not None:
+            x, y = grid.get(f"{mask}_points")
+
+            fig_dict.get("ax").plot(
+                x,
+                y,
+                markers.get("marker") + markers.get("color"),
+                markersize=markers.get("size"),
+                label="Set " + mask.split("_")[0] + " points",
+            )
 
     return fig_dict
 
 
 def draw_object_points(
     fig_dict: dict,
-    model: ModelRun,
+    model: dict,
     objects_to_plot: list[str],
     default_dict: dict = default_markers.get("generic_objects"),
 ):
@@ -86,7 +83,6 @@ def draw_object_points(
     for obj_type in objects_to_plot:
         markers = dict(default_dict)
         markers.update(default_markers.get(obj_type, default_dict))
-
         if model.get(obj_type) is not None:
             x, y = model[obj_type].xy(native=True)
             fig_dict.get("ax").plot(
@@ -101,13 +97,20 @@ def draw_object_points(
 
 
 def draw_mask(
-    fig_dict: dict, x_vec: np.ndarray, y_vec: np.ndarray, mask: np.ndarray
+    fig_dict: dict,
+    grid,
+    mask_to_plot: str,
 ) -> dict:
-    xx, yy = np.meshgrid(x_vec, y_vec)
+
+    # xx, yy = np.meshgrid(x_vec, y_vec)
+    xx = grid.longrid(native=True)
+    yy = grid.latgrid(native=True)
+    mask = grid.get(f"{mask_to_plot}_mask")
+    if mask is None:
+        return fig_dict
+
     mask = mask.astype(float)
-
     mask[mask < 1] = np.nan
-
     fig_dict.get("ax").contourf(xx, yy, mask, cmap="gray")
 
     return fig_dict
