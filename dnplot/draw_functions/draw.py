@@ -39,7 +39,8 @@ def draw_gridded_magnitude(
     #     levels = np.linspace(np.floor(vmin), np.ceil(vmax), 11)
     xx, yy = np.meshgrid(x, y)
     tri = mtri.Triangulation(xx.ravel(), yy.ravel())
-    if len(levels) > 1:
+
+    if len(levels) > 1 and not np.isclose(np.diff(levels)[0], 0):
         cont = ax.tricontourf(tri, data.ravel(), cmap=cmap, levels=levels)
     else:
         cont = ax.pcolor(x, y, data, cmap=cmap, label=label)

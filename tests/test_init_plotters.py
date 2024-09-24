@@ -1,6 +1,6 @@
-from dnplot import Dnora, Plotly
+from dnplot import Matplotlib, Plotly
 
 
 def test_init():
-    dn = Dnora({})
+    dn = Matplotlib({})
     pl = Plotly({})
