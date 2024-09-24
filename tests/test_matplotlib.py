@@ -85,7 +85,7 @@ def test_plot_wind():
         }
     )
 
-    plot.wind()
+    plot.wind(test_mode=True)
 
 
 def test_plot_current():
@@ -112,4 +112,4 @@ def test_plot_current():
         }
     )
 
-    plot.current()
+    plot.current(test_mode=True)

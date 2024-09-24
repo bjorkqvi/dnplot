@@ -9,7 +9,11 @@ class Matplotlib:
     def __init__(self, data_dict: dict):
         self.data_dict = data_dict
 
-    def topo(self, plotter: Callable = matplotlib_functions.topo_plotter) -> None:
+    def topo(
+        self,
+        plotter: Callable = matplotlib_functions.topo_plotter,
+        test_mode: bool = False,
+    ) -> None:
         fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
         gl = ax.gridlines(
             crs=ccrs.PlateCarree(),
@@ -23,32 +27,25 @@ class Matplotlib:
         fig_dict = {"fig": fig, "ax": ax, "gl": gl}
         fig_dict = plotter(fig_dict, self.data_dict)
         fig_dict.get("ax").legend()
-        fig_dict.get("fig").show()
+        if not test_mode:
+            fig_dict.get("fig").show()
 
-    def grid(self, plotter: Callable = matplotlib_functions.grid_plotter) -> None:
+    def grid(
+        self,
+        plotter: Callable = matplotlib_functions.grid_plotter,
+        test_mode: bool = False,
+    ) -> None:
         fig, ax = plt.subplots(1)
         fig_dict = {"fig": fig, "ax": ax}
         fig_dict = plotter(fig_dict, self.data_dict)
         fig_dict.get("ax").legend()
-        fig_dict.get("fig").show()
+        if not test_mode:
+            fig_dict.get("fig").show()
 
-    def wind(self, plotter: Callable = matplotlib_functions.directional_data_plotter):
-        fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
-        gl = ax.gridlines(
-            crs=ccrs.PlateCarree(),
-            draw_labels=True,
-            color="gray",
-            alpha=0.5,
-            linestyle="--",
-        )
-        gl.top_labels = None
-        gl.right_labels = None
-        fig_dict = {"fig": fig, "ax": ax, "gl": gl}
-        fig_dict = plotter(fig_dict, self.data_dict, obj_type="wind")
-        fig_dict.get("fig").show()
-
-    def current(
-        self, plotter: Callable = matplotlib_functions.directional_data_plotter
+    def wind(
+        self,
+        plotter: Callable = matplotlib_functions.directional_data_plotter,
+        test_mode: bool = False,
     ):
         fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
         gl = ax.gridlines(
@@ -61,8 +58,33 @@ class Matplotlib:
         gl.top_labels = None
         gl.right_labels = None
         fig_dict = {"fig": fig, "ax": ax, "gl": gl}
-        fig_dict = plotter(fig_dict, self.data_dict, obj_type="current")
-        fig_dict.get("fig").show()
+        fig_dict = plotter(
+            fig_dict, self.data_dict, obj_type="wind", test_mode=test_mode
+        )
+        if not test_mode:
+            fig_dict.get("fig").show()
+
+    def current(
+        self,
+        plotter: Callable = matplotlib_functions.directional_data_plotter,
+        test_mode: bool = False,
+    ):
+        fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
+        gl = ax.gridlines(
+            crs=ccrs.PlateCarree(),
+            draw_labels=True,
+            color="gray",
+            alpha=0.5,
+            linestyle="--",
+        )
+        gl.top_labels = None
+        gl.right_labels = None
+        fig_dict = {"fig": fig, "ax": ax, "gl": gl}
+        fig_dict = plotter(
+            fig_dict, self.data_dict, obj_type="current", test_mode=test_mode
+        )
+        if not test_mode:
+            fig_dict.get("fig").show()
 
     def spectra(self, plotter: Callable = matplotlib_functions.spectra_plotter):
         fig, ax = plt.subplots(subplot_kw={"polar": True})

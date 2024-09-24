@@ -9,6 +9,8 @@ dependencies:
   - pandas
   - xarray=>0.20.1
   - pip
+  - pip:
+    - geo-skeletons==0.19.1
   - pytest
   - cartopy
   - plotly
