@@ -28,7 +28,7 @@ class Matplotlib:
         fig_dict = plotter(fig_dict, self.data_dict)
         fig_dict.get("ax").legend()
         if not test_mode:
-            fig_dict.get("fig").show()
+            plt.show(block=True)
 
     def grid(
         self,
@@ -40,7 +40,8 @@ class Matplotlib:
         fig_dict = plotter(fig_dict, self.data_dict)
         fig_dict.get("ax").legend()
         if not test_mode:
-            fig_dict.get("fig").show()
+            plt.show(block=True)
+            # fig_dict.get("fig").show()
 
     def wind(
         self,
@@ -62,7 +63,7 @@ class Matplotlib:
             fig_dict, self.data_dict, obj_type="wind", test_mode=test_mode
         )
         if not test_mode:
-            fig_dict.get("fig").show()
+            plt.show(block=True)
 
     def current(
         self,
@@ -84,13 +85,14 @@ class Matplotlib:
             fig_dict, self.data_dict, obj_type="current", test_mode=test_mode
         )
         if not test_mode:
-            fig_dict.get("fig").show()
+            plt.show(block=True)
 
     def spectra(self, plotter: Callable = matplotlib_functions.spectra_plotter):
         fig, ax = plt.subplots(subplot_kw={"polar": True})
         fig_dict = {"fig": fig, "ax": ax}
         fig_dict = plotter(fig_dict, self.data_dict)
-        fig_dict.get("fig").show()
+        if not test_mode:
+            plt.show(block=True)
 
     def waveseries(
         self,
@@ -104,7 +106,8 @@ class Matplotlib:
         fig, ax2 = fig, ax.twinx()
         fig_dict = {"fig": fig, "ax": ax, "ax2": ax2}
         fig_dict = plotter(fig_dict, self.data_dict)
-        fig_dict.get("fig").show()
+        if not test_mode:
+            plt.show(block=True)
 
 
 class Matplotlib1:
