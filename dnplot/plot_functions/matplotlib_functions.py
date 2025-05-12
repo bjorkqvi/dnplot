@@ -137,10 +137,10 @@ def spectra_plotter(fig_dict: dict, model) -> dict:
             ax_slider, "time_index", 0, len(spectra.time()) - 1, valinit=0, valstep=1
         )
         sliders["time"].on_changed(update_plot)
-    if len(spectra.inds()) > 1:
+    if len(spectra.inds()) > 0:
         ax_slider2 = plt.axes([0.17, 0.01, 0.65, 0.03])
         sliders["inds"] = Slider(
-            ax_slider2, "inds_index", 0, len(spectra.x()) - 1, valinit=0, valstep=1
+            ax_slider2, "inds_index", 0, len(spectra.inds()) - 1, valinit=0, valstep=1
         )
         sliders["inds"].on_changed(update_plot)
     update_plot(0)
@@ -313,10 +313,10 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
             ax_slider, "time_index", 0, len(spectra1d.time()) - 1, valinit=0, valstep=1
         )
         sliders["time"].on_changed(update_plot)
-    if len(spectra1d.inds()) > 1:
+    if len(spectra1d.inds()) > 0:
         ax_slider2 = plt.axes([0.17, 0.01, 0.65, 0.03])
         sliders["inds"] = Slider(
-            ax_slider2, "inds_index", 0, len(spectra1d.x()) - 1, valinit=0, valstep=1
+            ax_slider2, "inds_index", 0, len(spectra1d.inds()) - 1, valinit=0, valstep=1
         )
         sliders["inds"].on_changed(update_plot)
     update_plot(0)
