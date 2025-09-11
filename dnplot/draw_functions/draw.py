@@ -21,16 +21,19 @@ def draw_gridded_magnitude(
     fig = fig_dict.get("fig")
     ax = fig_dict.get("ax")
     if vmin is None:
-        vmin = np.min(data)
+        vmin = np.nanmin(data)
     if vmax is None:
-        vmax = np.max(data)
+        vmax = np.nanmax(data)
 
+    vmin = np.maximum(np.floor(vmin) - 1, 0)
+    vmax = np.ceil(vmax) + 1
+    n_of_bins = np.maximum(np.floor(vmax - vmin + 3).astype(int), 11)
     levels = np.linspace(
-        np.min(np.floor(vmin) - 1, 0),
-        np.ceil(vmax) + 1,
-        np.floor(vmax - vmin + 3).astype(int),
+        vmin,
+        vmax,
+        n_of_bins,
     )
-
+    data = np.nan_to_num(data)
     if len(levels) > 1 and not np.isclose(np.diff(levels)[0], 0):
         xx, yy = np.meshgrid(x, y)
         tri = mtri.Triangulation(xx.ravel(), yy.ravel())
