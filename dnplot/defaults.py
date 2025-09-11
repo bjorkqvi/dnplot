@@ -1,8 +1,23 @@
 import cmocean.cm
 
+DEFAULT_VARIABLE_DATA = {
+    "name": None,
+    "unit": None,
+    "cmap": cmocean.cm.thermal,
+}
 
 default_variable = {
     "hs": {"name": "Significant wave height", "unit": "m", "cmap": cmocean.cm.amp},
+    "tp": {"name": "Peak wave period", "unit": "s", "cmap": cmocean.cm.tempo},
+    "tm01": {"name": "Mean wave period", "unit": "s", "cmap": cmocean.cm.tempo},
+    "tm02": {
+        "name": "Spectral zero-crossing wave period",
+        "unit": "s",
+        "cmap": cmocean.cm.tempo,
+    },
+    "tm_10": {"name": "Energy period", "unit": "s", "cmap": cmocean.cm.tempo},
+    "dirp": {"name": "Peak wave direction", "unit": "s", "cmap": cmocean.cm.phase},
+    "dirm": {"name": "Mean wave direction", "unit": "s", "cmap": cmocean.cm.phase},
     "wind": {"name": "Wind", "unit": "m/s", "cmap": cmocean.cm.tempo},
     "current": {"name": "Current", "unit": "m/s", "cmap": cmocean.cm.tempo},
     "topo": {
