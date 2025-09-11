@@ -2,7 +2,7 @@ from ..draw_functions import draw
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import numpy as np
-from ..defaults import default_variable
+from ..defaults import default_variable, DEFAULT_VARIABLE_DATA
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from matplotlib.colors import Normalize
@@ -45,6 +45,56 @@ def topo_plotter(fig_dict: dict, data_dict: dict, coastline: bool = True) -> dic
     fig_dict["cbar"].set_label("Depth [m]")
     fig_dict["ax"].set_title(f"{grid.name} {grid.ds().attrs.get('source', '')}")
 
+    return fig_dict
+
+
+def wavegrid_plotter(fig_dict: dict, data_dict: dict, data_var: str) -> dict:
+    def update_plot(val):
+        nonlocal fig_dict
+        nonlocal figure_initialized
+
+        nonlocal plotting_data
+
+        fig_dict = draw.draw_gridded_magnitude(
+            fig_dict,
+            obj.x(native=True),
+            obj.y(native=True),
+            obj.get(data_var, squeeze=False)[val, :, :],
+            vmax=np.nanmax(obj.get(data_var)),
+            vmin=0,
+            cmap=plotting_data["cmap"],
+        )
+        fig_dict = draw.draw_coastline(fig_dict)
+
+        fig_dict["ax"].set_title(f"{obj.time(datetime=False)[val]} {obj.name}")
+        figure_initialized = True
+
+    obj = data_dict["wavegrid"]
+    plotting_data = default_variable.get(data_var, DEFAULT_VARIABLE_DATA)
+
+    figure_initialized = False
+    if len(obj.time()) > 1:
+        ax_slider = plt.axes([0.17, 0.05, 0.65, 0.03])
+        time_slider = Slider(
+            ax_slider, "time_index", 0, len(obj.time()) - 1, valinit=0, valstep=1
+        )
+        time_slider.on_changed(update_plot)
+
+    update_plot(0)
+    fig_dict["ax"].set_xlabel(obj.core.x_str)
+    fig_dict["ax"].set_ylabel(obj.core.y_str)
+
+    # Try to determine name and units
+    std_name = plotting_data.get("name")
+    unit = plotting_data.get("unit")
+
+    metaparam = obj.core.meta_parameter(data_var)
+    if metaparam is not None:
+        std_name = std_name or metaparam.standard_name()
+        unit = unit or metaparam.units()
+
+    fig_dict["cbar"].set_label(f"{std_name} [{unit}]")
+    plt.show(block=True)
     return fig_dict
 
 
