@@ -157,10 +157,11 @@ def draw_arrows(
     else:
         step_lat = max(round(len(lat) / 10), 1)
         step_lon = max(round(len(lon) / 10), 1)
-    scale = np.nanmax((xdata**2 + ydata**2) ** 0.5) * 50 / step_lat
+    scale = np.max((xdata**2 + ydata**2) ** 0.5) * 100
     ax = fig_dict.get("ax")
     for m in range(0, len(lon), step_lon):
         for n in range(0, len(lat), step_lat):
+
             ax.arrow(
                 lon[m],
                 lat[n],
@@ -168,8 +169,8 @@ def draw_arrows(
                 ydata[n][m] / scale,
                 color="white",
                 linewidth=0.15,
-                head_width=10 / scale,
-                head_length=5 / scale,
+                head_width=0.01,
+                head_length=0.005,
                 overhang=1,
             )  # linewidth=.02, head_width=.01, head_length=.01
     return fig_dict
