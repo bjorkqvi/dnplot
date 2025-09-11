@@ -106,7 +106,11 @@ class Matplotlib:
         if not test_mode:
             plt.show(block=True)
 
-    def spectra(self, plotter: Callable = matplotlib_functions.spectra_plotter):
+    def spectra(
+        self,
+        plotter: Callable = matplotlib_functions.spectra_plotter,
+        test_mode: bool = False,
+    ):
         fig, ax = plt.subplots(subplot_kw={"polar": True})
         fig_dict = {"fig": fig, "ax": ax}
         fig_dict = plotter(fig_dict, self.data_dict)
@@ -117,10 +121,15 @@ class Matplotlib:
         self,
         var=["hs", ("tm01", "tm02"), "dirm"],
         plotter: Callable = matplotlib_functions.waveseries_plotter,
+        test_mode: bool = False,
     ):
         fig_dict = plotter(self.data_dict, var)
 
-    def spectra1d(self, plotter: Callable = matplotlib_functions.spectra1d_plotter):
+    def spectra1d(
+        self,
+        plotter: Callable = matplotlib_functions.spectra1d_plotter,
+        test_mode: bool = False,
+    ):
         fig, ax = plt.subplots()
         fig, ax2 = fig, ax.twinx()
         fig_dict = {"fig": fig, "ax": ax, "ax2": ax2}
