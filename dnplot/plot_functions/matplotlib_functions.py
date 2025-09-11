@@ -335,7 +335,9 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
             spr,
         )
 
-        ax.set_ylim(0, np.max(spectra1d.spec()[:, sliders["inds"].val, :]) * 1.1)
+        ax.set_ylim(
+            0, np.max(spectra1d.spec(squeeze=False)[:, sliders["inds"].val, :]) * 1.1
+        )
         ax.set_title(
             f"{spectra1d.time(datetime=False)[sliders['time'].val]} {spectra1d.name} \n Latitude={spectra1d.lat()[sliders['inds'].val]:.4f} Longitude={spectra1d.lon()[sliders['inds'].val]:.4f}"
         )
