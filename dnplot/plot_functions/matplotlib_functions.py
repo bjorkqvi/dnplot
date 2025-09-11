@@ -149,7 +149,7 @@ def directional_data_plotter(
     metaparam = obj.core.meta_parameter("mag")
     if metaparam is not None:
         std_name = std_name or metaparam.standard_name()
-        unit = unit or metaparam.unit()
+        unit = unit or metaparam.units()
 
     std_name = std_name or obj_type
     unit = unit or "?"
@@ -217,11 +217,11 @@ def waveseries_plotter(model, var: list[str]):
                     ts.get("time"),
                     ts.get(var1),
                     color="b",
-                    label=f"{var1} ({ts.meta.get(var1)['unit']})",
+                    label=f"{var1} ({ts.meta.get(var1)['units']})",
                 )
 
                 ax.set_ylabel(
-                    f"{ts.meta.get(var1)['long_name']}\n ({ts.meta.get(var1)['unit']})",
+                    f"{ts.meta.get(var1)['long_name']}\n ({ts.meta.get(var1)['units']})",
                     color="b",
                 )
                 ax.set_xlabel("UTC", fontsize=12)
@@ -230,10 +230,10 @@ def waveseries_plotter(model, var: list[str]):
                     ts.get("time"),
                     ts.get(var2),
                     color="g",
-                    label=f"{var2} ({ts.meta.get(var2)['unit']})",
+                    label=f"{var2} ({ts.meta.get(var2)['units']})",
                 )
                 ax2.set_ylabel(
-                    f"{ts.meta.get(var2)['long_name']}\n ({ts.meta.get(var2)['unit']})",
+                    f"{ts.meta.get(var2)['long_name']}\n ({ts.meta.get(var2)['units']})",
                     color="g",
                 )
                 lines1, labels1 = ax.get_legend_handles_labels()
@@ -246,10 +246,10 @@ def waveseries_plotter(model, var: list[str]):
                     ts.get("time"),
                     ts.get(item),
                     color="b",
-                    label=f"{item} ({ts.meta.get(item)['unit']})",
+                    label=f"{item} ({ts.meta.get(item)['units']})",
                 )
                 axes[i].set_ylabel(
-                    f"{ts.meta.get(item)['long_name']} \n ({ts.meta.get(item)['unit']})"
+                    f"{ts.meta.get(item)['long_name']} \n ({ts.meta.get(item)['units']})"
                 )
                 axes[i].set_xlabel("UTC", fontsize=12)
                 axes[i].legend()
@@ -266,11 +266,11 @@ def waveseries_plotter(model, var: list[str]):
                     ts.get("time"),
                     ts.get(var1),
                     color="b",
-                    label=f"{var1} ({ts.meta.get(var1)['unit']})",
+                    label=f"{var1} ({ts.meta.get(var1)['units']})",
                 )
 
                 ax.set_ylabel(
-                    f"{ts.meta.get(var1)['long_name']}\n ({ts.meta.get(var1)['unit']})",
+                    f"{ts.meta.get(var1)['long_name']}\n ({ts.meta.get(var1)['units']})",
                     color="b",
                 )
                 ax.set_xlabel("UTC", fontsize=12)
@@ -279,10 +279,10 @@ def waveseries_plotter(model, var: list[str]):
                     ts.get("time"),
                     ts.get(var2),
                     color="g",
-                    label=f"{var2} ({ts.meta.get(var2)['unit']})",
+                    label=f"{var2} ({ts.meta.get(var2)['units']})",
                 )
                 ax2.set_ylabel(
-                    f"{ts.meta.get(var2)['long_name']}\n ({ts.meta.get(var2)['unit']})",
+                    f"{ts.meta.get(var2)['long_name']}\n ({ts.meta.get(var2)['units']})",
                     color="g",
                 )
                 lines1, labels1 = ax.get_legend_handles_labels()
@@ -294,11 +294,11 @@ def waveseries_plotter(model, var: list[str]):
                     ts.get("time"),
                     ts.get(item),
                     color="b",
-                    label=f"{item} ({ts.meta.get(item)['unit']})",
+                    label=f"{item} ({ts.meta.get(item)['units']})",
                 )
                 ax.set_xlabel("UTC", fontsize=12)
                 ax.set_ylabel(
-                    f"{ts.meta.get(item)['long_name']} \n ({ts.meta.get(item)['unit']})"
+                    f"{ts.meta.get(item)['long_name']} \n ({ts.meta.get(item)['units']})"
                 )
                 ax.legend()
                 ax.grid(True)
@@ -347,7 +347,7 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
         )
         ax2.set_ylim(0, np.max(spectra1d.dirm()) * 1.1)
         ax2.set_ylabel(
-            f"{spectra1d.meta.get('dirm').get('long_name')}\n {spectra1d.meta.get('dirm').get('unit')}",
+            f"{spectra1d.meta.get('dirm').get('long_name')}\n {spectra1d.meta.get('dirm').get('units')}",
             color="g",
         )
         ax2.yaxis.set_label_position("right")
@@ -386,10 +386,10 @@ def scatter_plotter(fig_dict: dict, model, var):
         ts.get(x), ts.get(y), c="blue", alpha=0.6, edgecolors="w", s=100
     )
     fig_dict["ax"].set_xlabel(
-        f"{ts.meta.get(x)['long_name']}\n ({ts.meta.get(x)['unit']})"
+        f"{ts.meta.get(x)['long_name']}\n ({ts.meta.get(x)['units']})"
     )
     fig_dict["ax"].set_ylabel(
-        f"{ts.meta.get(y)['long_name']}\n ({ts.meta.get(y)['unit']})"
+        f"{ts.meta.get(y)['long_name']}\n ({ts.meta.get(y)['units']})"
     )
     fig_dict["ax"].grid(linestyle="--")
     plt.show(block=True)
@@ -499,10 +499,10 @@ def scatter1_plotter(fig_dict: dict, model, model1, var):
     fig_dict["ax"].plot(x_values, y_values, linewidth=2, label="x=y")
 
     fig_dict["ax"].set_xlabel(
-        f"{ds_model.meta.get(x)['long_name']}\n ({ds_model.meta.get(x)['unit']})"
+        f"{ds_model.meta.get(x)['long_name']}\n ({ds_model.meta.get(x)['units']})"
     )
     fig_dict["ax"].set_ylabel(
-        f"{ds1_model1.meta.get(y)['long_name']}\n ({ds1_model1.meta.get(y)['unit']})"
+        f"{ds1_model1.meta.get(y)['long_name']}\n ({ds1_model1.meta.get(y)['units']})"
     )
 
     # color bar
