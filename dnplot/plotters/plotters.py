@@ -9,6 +9,25 @@ class Matplotlib:
     def __init__(self, data_dict: dict):
         self.data_dict = data_dict
 
+    def wavegrid(
+        self, data_var: str, plotter: Callable = matplotlib_functions.wavegrid_plotter
+    ):
+        fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
+        gl = ax.gridlines(
+            crs=ccrs.PlateCarree(),
+            draw_labels=True,
+            color="gray",
+            alpha=0.5,
+            linestyle="--",
+        )
+        gl.top_labels = None
+        gl.right_labels = None
+        fig_dict = {"fig": fig, "ax": ax, "gl": gl}
+        fig_dict = plotter(fig_dict, self.data_dict, data_var)
+        fig_dict.get("ax").legend()
+        # if not test_mode:
+        #     plt.show(block=True)
+
     def topo(
         self,
         plotter: Callable = matplotlib_functions.topo_plotter,
