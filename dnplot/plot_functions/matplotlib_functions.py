@@ -109,7 +109,7 @@ def directional_data_plotter(
             obj.x(native=True),
             obj.y(native=True),
             obj.mag(squeeze=False)[val, :, :],
-            vmax=np.max(obj.mag()),
+            vmax=np.nanmax(obj.mag()),
             vmin=0,
             cmap=default_variable[obj_type]["cmap"],
         )
@@ -336,7 +336,7 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
         )
 
         ax.set_ylim(
-            0, np.max(spectra1d.spec(squeeze=False)[:, sliders["inds"].val, :]) * 1.1
+            0, np.nanmax(spectra1d.spec(squeeze=False)[:, sliders["inds"].val, :]) * 1.1
         )
         ax.set_title(
             f"{spectra1d.time(datetime=False)[sliders['time'].val]} {spectra1d.name} \n Latitude={spectra1d.lat()[sliders['inds'].val]:.4f} Longitude={spectra1d.lon()[sliders['inds'].val]:.4f}"
@@ -345,7 +345,7 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
         ax.set_ylabel(
             f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}", color="b"
         )
-        ax2.set_ylim(0, np.max(spectra1d.dirm()) * 1.1)
+        ax2.set_ylim(0, np.nanmax(spectra1d.dirm()) * 1.1)
         ax2.set_ylabel(
             f"{spectra1d.meta.get('dirm').get('long_name')}\n {spectra1d.meta.get('dirm').get('units')}",
             color="g",
