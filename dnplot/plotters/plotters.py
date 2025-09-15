@@ -10,7 +10,7 @@ class Matplotlib:
         self.data_dict = data_dict
 
     def wavegrid(
-        self, data_var: str, plotter: Callable = matplotlib_functions.wavegrid_plotter
+        self, data_var: str, plotter: Callable = matplotlib_functions.wavegrid_plotter, coastline: bool=None, contour: bool=False, 
     ):
         fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
         gl = ax.gridlines(
@@ -23,7 +23,7 @@ class Matplotlib:
         gl.top_labels = None
         gl.right_labels = None
         fig_dict = {"fig": fig, "ax": ax, "gl": gl}
-        fig_dict = plotter(fig_dict, self.data_dict, data_var)
+        fig_dict = plotter(fig_dict, self.data_dict, data_var, coastline=coastline, contour=contour)
         fig_dict.get("ax").legend()
         # if not test_mode:
         #     plt.show(block=True)
@@ -31,6 +31,7 @@ class Matplotlib:
     def topo(
         self,
         plotter: Callable = matplotlib_functions.topo_plotter,
+        coastline: bool = None,
         test_mode: bool = False,
     ) -> None:
         fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
@@ -44,7 +45,7 @@ class Matplotlib:
         gl.top_labels = None
         gl.right_labels = None
         fig_dict = {"fig": fig, "ax": ax, "gl": gl}
-        fig_dict = plotter(fig_dict, self.data_dict)
+        fig_dict = plotter(fig_dict, self.data_dict, coastline=coastline)
         fig_dict.get("ax").legend()
         if not test_mode:
             plt.show(block=True)
@@ -52,11 +53,12 @@ class Matplotlib:
     def grid(
         self,
         plotter: Callable = matplotlib_functions.grid_plotter,
+        coastline: bool = None,
         test_mode: bool = False,
     ) -> None:
         fig, ax = plt.subplots(1)
         fig_dict = {"fig": fig, "ax": ax}
-        fig_dict = plotter(fig_dict, self.data_dict)
+        fig_dict = plotter(fig_dict, self.data_dict, coastline=coastline)
         fig_dict.get("ax").legend()
         if not test_mode:
             plt.show(block=True)
@@ -65,6 +67,8 @@ class Matplotlib:
     def wind(
         self,
         plotter: Callable = matplotlib_functions.directional_data_plotter,
+        coastline: bool = True, 
+        contour: bool = True,
         test_mode: bool = False,
     ):
         fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
@@ -79,7 +83,7 @@ class Matplotlib:
         gl.right_labels = None
         fig_dict = {"fig": fig, "ax": ax, "gl": gl}
         fig_dict = plotter(
-            fig_dict, self.data_dict, obj_type="wind", test_mode=test_mode
+            fig_dict, self.data_dict, obj_type="wind", coastline=coastline, contour=contour, test_mode=test_mode
         )
         if not test_mode:
             plt.show(block=True)
@@ -87,6 +91,8 @@ class Matplotlib:
     def current(
         self,
         plotter: Callable = matplotlib_functions.directional_data_plotter,
+        coastline: bool = False, 
+        contour: bool = False,
         test_mode: bool = False,
     ):
         fig, ax = plt.subplots(subplot_kw={"projection": ccrs.PlateCarree()})
@@ -101,7 +107,7 @@ class Matplotlib:
         gl.right_labels = None
         fig_dict = {"fig": fig, "ax": ax, "gl": gl}
         fig_dict = plotter(
-            fig_dict, self.data_dict, obj_type="current", test_mode=test_mode
+            fig_dict, self.data_dict, obj_type="current", coastline=coastline,contour=contour,test_mode=test_mode
         )
         if not test_mode:
             plt.show(block=True)

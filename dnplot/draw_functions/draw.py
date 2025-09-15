@@ -14,6 +14,7 @@ def draw_gridded_magnitude(
     vmax: Optional[float] = None,
     vmin: Optional[float] = None,
     label: str = "__nolegend__",
+    contour: bool = False,
 ):
     """
     Takes lon and lat positions, and data points. Plots countourplot on given ax.
@@ -34,17 +35,24 @@ def draw_gridded_magnitude(
         n_of_bins,
     )
     data = np.nan_to_num(data)
-    if len(levels) > 1 and not np.isclose(np.diff(levels)[0], 0):
+    
+    have_levels = len(levels) > 1 and not np.isclose(np.diff(levels)[0], 0)
+    gridded_data = data.shape == (len(y), len(x)) 
+
+    if not gridded_data and have_levels or contour:
         xx, yy = np.meshgrid(x, y)
         tri = mtri.Triangulation(xx.ravel(), yy.ravel())
         cont = ax.tricontourf(tri, data.ravel(), cmap=cmap, levels=levels)
+        fig_dict['want_coastline'] = True
     else:
         cont = ax.pcolor(x, y, data, cmap=cmap, label=label)
+        fig_dict['want_constaline'] = False
 
     cbar = fig_dict.get("cbar") or fig.colorbar(cont)
 
     fig_dict["cbar"] = cbar
     fig_dict["cont"] = cont
+    
 
     return fig_dict
 
