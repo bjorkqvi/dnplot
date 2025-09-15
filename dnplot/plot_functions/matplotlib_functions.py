@@ -10,9 +10,9 @@ from matplotlib import cm
 from scipy.stats import gaussian_kde
 
 
-def grid_plotter(fig_dict: dict, data_dict: dict) -> dict:
+def grid_plotter(fig_dict: dict, data_dict: dict, coastline: bool=None) -> dict:
     """Plot the depth information and land mask. Also plots information about e.g. wind data and spectral points"""
-    fig_dict = topo_plotter(fig_dict, data_dict, coastline=False)
+    fig_dict = topo_plotter(fig_dict, data_dict, coastline=coastline)
     fig_dict = draw.draw_masked_points(
         fig_dict, data_dict.get("grid"), masks_to_plot=["boundary", "output"]
     )
@@ -24,18 +24,31 @@ def grid_plotter(fig_dict: dict, data_dict: dict) -> dict:
     return fig_dict
 
 
-def topo_plotter(fig_dict: dict, data_dict: dict, coastline: bool = True) -> dict:
+def topo_plotter(fig_dict: dict, data_dict: dict, coastline: bool = None) -> dict:
     """Plot the depth information and land mask"""
     grid = data_dict.get("grid")
+    sea_mask = grid.get('sea_mask')
+    if sea_mask is None or np.all(sea_mask):
+        contour = False
+    else:
+        contour = True
+        
     fig_dict = draw.draw_gridded_magnitude(
         fig_dict,
         grid.x(native=True),
         grid.y(native=True),
         grid.topo(),
         cmap=default_variable["topo"]["cmap"],
+        contour=contour
     )
 
     fig_dict = draw.draw_mask(fig_dict, grid, mask_to_plot="land")
+
+    if coastline is None and not contour:
+        # This has been gicen by the draw_gridded_magnitude
+        # If we have used pcolor it is false, if contour it is true
+        # Don't do this if we have just requested a countour plot
+        coastline = fig_dict.get('want_coastline', False)
 
     if coastline:
         fig_dict = draw.draw_coastline(fig_dict)
@@ -48,12 +61,14 @@ def topo_plotter(fig_dict: dict, data_dict: dict, coastline: bool = True) -> dic
     return fig_dict
 
 
-def wavegrid_plotter(fig_dict: dict, data_dict: dict, data_var: str) -> dict:
+def wavegrid_plotter(fig_dict: dict, data_dict: dict, data_var: str, coastline: bool=None, contour: bool=False) -> dict:
     def update_plot(val):
         nonlocal fig_dict
         nonlocal figure_initialized
 
         nonlocal plotting_data
+        nonlocal coastline
+        nonlocal contour
 
         fig_dict = draw.draw_gridded_magnitude(
             fig_dict,
@@ -63,8 +78,14 @@ def wavegrid_plotter(fig_dict: dict, data_dict: dict, data_var: str) -> dict:
             vmax=np.nanmax(obj.get(data_var)),
             vmin=0,
             cmap=plotting_data["cmap"],
+            contour=contour,
         )
-        fig_dict = draw.draw_coastline(fig_dict)
+        if coastline is None:
+            # This has been gicen by the draw_gridded_magnitude
+            # If we have used pcolor it is false, if contour it is true
+            coastline = fig_dict.get('want_coastline', False)
+        if coastline:
+            fig_dict = draw.draw_coastline(fig_dict)
 
         fig_dict["ax"].set_title(f"{obj.time(datetime=False)[val]} {obj.name}")
         figure_initialized = True
@@ -99,11 +120,12 @@ def wavegrid_plotter(fig_dict: dict, data_dict: dict, data_var: str) -> dict:
 
 
 def directional_data_plotter(
-    fig_dict: dict, data_dict: dict, obj_type: str, test_mode: bool = False
+    fig_dict: dict, data_dict: dict, obj_type: str, coastline: bool=None, contour: bool=False, test_mode: bool = False
 ) -> dict:
     def update_plot(val):
         nonlocal fig_dict
         nonlocal figure_initialized
+        nonlocal coastline
         fig_dict = draw.draw_gridded_magnitude(
             fig_dict,
             obj.x(native=True),
@@ -112,8 +134,14 @@ def directional_data_plotter(
             vmax=np.nanmax(obj.mag()),
             vmin=0,
             cmap=default_variable[obj_type]["cmap"],
+            contour=contour,
         )
-        fig_dict = draw.draw_coastline(fig_dict)
+        if coastline is None:
+            # This has been gicen by the draw_gridded_magnitude
+            # If we have used pcolor it is false, if contour it is true
+            coastline = fig_dict.get('want_coastline', False)
+        if coastline:
+            fig_dict = draw.draw_coastline(fig_dict)
         fig_dict = draw.draw_arrows(
             fig_dict,
             obj.x(native=True),
