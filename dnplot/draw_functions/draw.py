@@ -3,6 +3,7 @@ from ..defaults import default_markers
 import matplotlib.tri as mtri
 from cartopy import feature as cfeature
 from typing import Optional
+import matplotlib.pyplot as plt
 
 
 def draw_gridded_magnitude(
@@ -35,24 +36,23 @@ def draw_gridded_magnitude(
         n_of_bins,
     )
     data = np.nan_to_num(data)
-    
+
     have_levels = len(levels) > 1 and not np.isclose(np.diff(levels)[0], 0)
-    gridded_data = data.shape == (len(y), len(x)) 
+    gridded_data = data.shape == (len(y), len(x))
 
     if not gridded_data and have_levels or contour:
         xx, yy = np.meshgrid(x, y)
         tri = mtri.Triangulation(xx.ravel(), yy.ravel())
         cont = ax.tricontourf(tri, data.ravel(), cmap=cmap, levels=levels)
-        fig_dict['want_coastline'] = True
+        fig_dict["want_coastline"] = True
     else:
         cont = ax.pcolor(x, y, data, cmap=cmap, label=label)
-        fig_dict['want_constaline'] = False
+        fig_dict["want_constaline"] = False
 
     cbar = fig_dict.get("cbar") or fig.colorbar(cont)
 
     fig_dict["cbar"] = cbar
     fig_dict["cont"] = cont
-    
 
     return fig_dict
 
@@ -191,6 +191,36 @@ def draw_coastline(fig_dict) -> dict:
             "physical", "coastline", "10m", facecolor="none", edgecolor="black"
         )
     )
+    return fig_dict
+
+
+LINES = {0: "", 1: "-", 2: "--"}
+default_colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+COLORS = {0: "k", 1: default_colors[1], 2: default_colors[3], 3: default_colors[6]}
+
+
+def draw_nested_grid_box(
+    fig_dict, data_dict, nest_level: int = 0, color_level: int = 0
+) -> dict:
+    """Draws the boxed for all nested grids"""
+    if not hasattr(data_dict, "nest"):
+        return fig_dict
+
+    lon, lat = data_dict.grid().edges("lon", native=True), data_dict.grid().edges(
+        "lat", native=True
+    )
+    if nest_level:
+        fig_dict.get("ax").plot(
+            [lon[0], lon[1], lon[1], lon[0], lon[0]],
+            [lat[0], lat[0], lat[1], lat[1], lat[0]],
+            label=data_dict.grid().name,
+            linestyle=LINES.get(nest_level, ":"),
+            color=COLORS.get(color_level, default_colors[9]),
+        )
+    nest_level += 1
+    for color_level, (__, nest) in enumerate(data_dict.nest(get_dict=True).items()):
+        fig_dict = draw_nested_grid_box(fig_dict, nest, nest_level, color_level)
+
     return fig_dict
 
 
