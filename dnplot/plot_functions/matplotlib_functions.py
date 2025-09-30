@@ -9,6 +9,7 @@ from matplotlib.colors import Normalize
 from matplotlib import cm
 from scipy.stats import gaussian_kde
 
+from dnplot.stats import calculate_RMSE, calculate_correlation
 
 def grid_plotter(fig_dict: dict, data_dict: dict, coastline: bool = None) -> dict:
     """Plot the depth information and land mask. Also plots information about e.g. wind data and spectral points"""
@@ -446,103 +447,83 @@ def xarray_to_dataframe(model) -> pd.DataFrame:
     return df
 
 
-def calculate_correlation(x, y):
-    x_mean = x.mean()
-    y_mean = y.mean()
-    covariance = ((x - x_mean) * (y - y_mean)).mean()
-    x_var = ((x - x_mean) ** 2).mean()
-    y_var = ((y - y_mean) ** 2).mean()
-    x_std = x_var**0.5
-    y_std = y_var**0.5
-    correlation = covariance / (x_std * y_std)
-    return correlation
-
-
-def calculate_RMSE(x, y):
-    X = x.values.reshape(-1, 1)
-    linear = LinearRegression()
-    linear.fit(X, y)
-    a = linear.coef_[0]
-    b = linear.intercept_
-    y_estimated = a * x + b
-    y_rmse = (y - y_estimated) ** 2
-    RMSE = (y_rmse.mean()) ** 0.5
-    return RMSE
-
-
-def scatter1_plotter(fig_dict: dict, model, model1, var):
-    ds_model = model.waveseries()
-    ds1_model1 = model1.waveseries()
-    x = var[0]
-    y = var[1]
-    df_model = xarray_to_dataframe(ds_model)
-    df1_model1 = xarray_to_dataframe(ds1_model1)
-    combined_df = pd.concat([df_model, df1_model1], axis=1)
-
+def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
+    """Plots a scatter plot of data from two different objects"""
+    
+  
+    xmodel = model.get('waveseries')
+    ymodel = model1.get('waveseries')
+    
+    xdf = xarray_to_dataframe(xmodel)
+    ydf = xarray_to_dataframe(ymodel)
+    combined_df = pd.concat([xdf, ydf], axis=1)
     combined_df_cleaned = combined_df.dropna()
 
-    df_model = combined_df_cleaned.iloc[:, : df_model.shape[1]].reset_index(drop=True)
-    df1_model1 = combined_df_cleaned.iloc[:, df_model.shape[1] :].reset_index(drop=True)
-    correlation = calculate_correlation(df_model[x], df1_model1[y])
+    xdf = combined_df_cleaned.iloc[:, : xdf.shape[1]].reset_index(drop=True)
+    ydf = combined_df_cleaned.iloc[:, xdf.shape[1] :].reset_index(drop=True)
 
-    RMSE = calculate_RMSE(df_model[x], df1_model1[y])
-    SI = RMSE / df_model[x].mean()
-    X = df_model[x].values.reshape(-1, 1)
-    linear = LinearRegression()
-    linear.fit(X, df1_model1[y])
+    xdata, ydata = xdf[xvar], ydf[yvar]
+    # Determine units
+    if hasattr(xmodel, 'meta'):
+        if xmodel.meta.get(xvar) is not None:
+            xunit = xmodel.meta.get(xvar).get('units','')
+            xvarname = xmodel.meta.get(xvar).get('long_name',xvar)
+    else:
+        xunit = ''
+        xvarname = xvar
+    if hasattr(ymodel, 'meta'):
+        if ymodel.meta.get(yvar) is not None:
+            yunit = xmodel.meta.get(yvar).get('units','')
+            yvarname = xmodel.meta.get(yvar).get('long_name',yvar)
+    else:
+        yunit=''
+        yvarname = yvar
 
-    x_range = np.linspace(0, np.ceil(X.max()), 100)
-    y_range = linear.predict(x_range.reshape(-1, 1))
+    # Statistics
+    RMSE = np.sqrt(np.mean((xdata-ydata)**2))
+    R = np.corrcoef(xdata, ydata)[0,1]
+    SI = RMSE / np.mean(xdata)*100
     # Text on the figure
-    text = "\n".join(
-        (
-            f"N={len(df_model)}",
-            f"Bias{df_model[x].mean() - df1_model1[y].mean():.4f}",
-            f"R\u00b2={correlation:.4f}",
-            f"RMSE={RMSE:.4f}",
-            f"SI={SI:.4f}",
-        )
-    )
+    text = [f"N={len(xdf)}"]
+    if xunit == yunit:
+        text.append(f"Bias={np.mean(xdata)-np.mean(ydata):.2f}{xunit}")
+        text.append(f"RMSE={RMSE:.2f}{xunit}")
+        text.append(f"SI={SI:.0f}%")
+    text.append(f"r={R:.2f}")
+    text = '\n'.join(text)
+
     # color for scatter density
-    xy = np.vstack([df_model[x].values, df1_model1[y].values])
+    xy = np.vstack([xdata, ydata])
     z = gaussian_kde(xy)(xy)
     norm = Normalize(vmin=z.min(), vmax=z.max())
-    cmap = cm.jet
+    cmap = cm.Blues
     sm = cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])
 
-    title = rf"$\bf{{{ds_model.name}}}$" + "\n" + rf"{x} vs {y}"
+    title = f"{xmodel.name} ({xvar}) vs {ymodel.name} ({yvar})"
     fig_dict["ax"].set_title(title, fontsize=14)
-    fig_dict["ax"].scatter(df_model[x], df1_model1[y], c=z, cmap=cmap, norm=norm, s=50)
-    x_max = np.ceil(df_model[x].max())
-    y_max = np.ceil(df1_model1[y].max())
+    fig_dict["ax"].scatter(xdata, ydata, c=z, cmap=cmap,  norm=norm,s=50)
+    
+    maxval = np.maximum(np.max(xdata), np.max(ydata))
+    fig_dict["ax"].set_xlim([0, maxval])
+    fig_dict["ax"].set_ylim([0, maxval])
 
-    if x_max > y_max:
-        fig_dict["ax"].set_ylim([0, x_max])
-        fig_dict["ax"].set_xlim([0, x_max])
-    else:
-        fig_dict["ax"].set_xlim([0, y_max])
-        fig_dict["ax"].set_ylim([0, y_max])
+    slope, intercept = np.polyfit(xdata, ydata,1)
+    x_range = np.linspace(0, np.ceil(np.max(xdata)), 100)
+    fig_dict["ax"].plot(x_range, x_range, linewidth=0.5, color='k',label="x=y")
 
+    sign = 'x' if intercept >=0 else '-'
     fig_dict["ax"].plot(
-        x_range, y_range, color="red", linewidth=2, label="Regression line"
+        x_range, slope*x_range+intercept, color="red", linewidth=2, label=f"Regression line y={slope:.2f}x{sign}{np.abs(intercept):.2f}"
     )
-
-    x_line = np.linspace(0, np.ceil(df_model[x].max()), 100)
-    a = np.sum(df_model[x] * df1_model1[y]) / np.sum(df_model[x] ** 2)
-    y_line = a * x_line
-
-    fig_dict["ax"].plot(x_line, y_line, linewidth=2, label="One parameter line")
-
-    x_values = np.linspace(0, np.ceil(df_model[x].max()), 100)
-    y_values = x_values
-    fig_dict["ax"].plot(x_values, y_values, linewidth=2, label="x=y")
+    slope_1p = np.mean(ydata)/np.mean(xdata)
+    fig_dict["ax"].plot(x_range, x_range*slope_1p, linewidth=2, color = 'm',label=f"One parameter line y={slope_1p:.2f}x ")
 
     fig_dict["ax"].set_xlabel(
-        f"{ds_model.meta.get(x)['long_name']}\n ({ds_model.meta.get(x)['units']})"
+        f"{xmodel.name} {xvarname}\n ({xunit})"
     )
     fig_dict["ax"].set_ylabel(
-        f"{ds1_model1.meta.get(y)['long_name']}\n ({ds1_model1.meta.get(y)['units']})"
+        f"{ymodel.name} {yvarname}\n ({yunit})"
     )
 
     # color bar
@@ -550,13 +531,13 @@ def scatter1_plotter(fig_dict: dict, model, model1, var):
     cbar.set_label("Density", rotation=270, labelpad=15)
 
     props = dict(boxstyle="square", facecolor="white", alpha=0.6)
-    ax = plt.gca()
+    ax = fig_dict["ax"]
     fig_dict["ax"].text(
-        0.005,
-        0.90,
+        0.05,
+        0.7,
         text,
         bbox=props,
-        fontsize=12,
+        fontsize=10,
         transform=ax.transAxes,
         verticalalignment="top",
         horizontalalignment="left",

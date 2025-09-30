@@ -3,7 +3,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
+
 import plotly.graph_objects as go
 from scipy.stats import gaussian_kde
 import os
@@ -24,28 +24,6 @@ def xarray_to_dataframe(model) -> pd.DataFrame:
     return df
 
 
-def calculate_correlation(x, y):
-    x_mean = x.mean()
-    y_mean = y.mean()
-    covariance = ((x - x_mean) * (y - y_mean)).mean()
-    x_var = ((x - x_mean) ** 2).mean()
-    y_var = ((y - y_mean) ** 2).mean()
-    x_std = x_var**0.5
-    y_std = y_var**0.5
-    correlation = covariance / (x_std * y_std)
-    return correlation
-
-
-def calculate_RMSE(x, y):
-    X = x.values.reshape(-1, 1)
-    linear = LinearRegression()
-    linear.fit(X, y)
-    a = linear.coef_[0]
-    b = linear.intercept_
-    y_estimated = a * x + b
-    y_rmse = (y - y_estimated) ** 2
-    RMSE = (y_rmse.mean()) ** 0.5
-    return RMSE
 
 
 def linear_regression_line(x, y, fig):
