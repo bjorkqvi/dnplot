@@ -3,7 +3,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 import numpy as np
 import pandas as pd
-
+from sklearn.linear_model import LinearRegression
 import plotly.graph_objects as go
 from scipy.stats import gaussian_kde
 import os
@@ -11,8 +11,8 @@ from threading import Timer
 import webbrowser
 import random
 from flask import Flask
-
-
+from dnplot.stats import calculate_correlation, calculate_RMSE
+from dnplot import sanitation
 def xarray_to_dataframe(model) -> pd.DataFrame:
     df = model.ds().to_dataframe()
     df = df.reset_index()
@@ -26,16 +26,13 @@ def xarray_to_dataframe(model) -> pd.DataFrame:
 
 
 
-def linear_regression_line(x, y, fig):
-    X = x.values.reshape(-1, 1)
-    linear = LinearRegression()
-    linear.fit(X, y)
-    x_range = np.linspace(0, np.ceil(X.max()), 100)
-    y_range = linear.predict(x_range.reshape(-1, 1))
+def linear_regression_line(xdata, ydata, fig):
+    slope, intercept = np.polyfit(xdata, ydata,1)
+    x_range = np.linspace(0, np.ceil(np.max(xdata)), 100)
     fig.add_traces(
         go.Scatter(
-            x=x_range.flatten(),
-            y=y_range.flatten(),
+            x=x_range,
+            y=x_range*slope+intercept,
             mode="lines",
             name="Linear regression",
             visible=True,
@@ -263,7 +260,7 @@ def waveseries_plotter_dash(model):
 
     port = random.randint(1000, 9999)
     Timer(1, open_browser, args=[port]).start()
-    app.run_server(debug=False, port=port)
+    app.run(debug=False, port=port)
 
 
 def waveseries_plotter(model, use_dash: bool):
@@ -444,43 +441,41 @@ def spectra_plotter(model):
 
     port = random.randint(1000, 9999)
     Timer(1, open_browser, args=[port]).start()
-    app.run_server(debug=False, port=port)
+    app.run(debug=False, port=port)
 
 
 def scatter_plotter(model, model1):
-    ds_model = model["waveseries"]
-    ds1_model1 = model1["waveseries"]
-    df_model = xarray_to_dataframe(model["waveseries"])
-    df1_model1 = xarray_to_dataframe(model1["waveseries"])
+    xmodel = sanitation.force_to_ds(model)
+    ymodel = sanitation.force_to_ds(model1)
+    xdf = sanitation.xarray_to_dataframe(xmodel)
+    ydf = sanitation.xarray_to_dataframe(ymodel)
 
-    common_columns = list(set(df_model.columns).intersection(set(df1_model1.columns)))
     df = pd.merge(
-        df_model[common_columns],
-        df1_model1[common_columns],
+        xdf.set_index("time").add_suffix(f" {xmodel.name}").reset_index(),
+        ydf.set_index("time").add_suffix(f" {ymodel.name}").reset_index(),
         on="time",
-        suffixes=(f" {ds_model.name}", f" {ds1_model1.name}"),
     )
     first_column = df.pop("time")
     df.insert(0, "time", first_column)
-    df_column = [col for col in df.columns if col.endswith(f" {ds_model.name}")]
-    df1_column = [col for col in df.columns if col.endswith(f" {ds1_model1.name}")]
+    df_column = [col for col in df.columns if col.endswith(f" {xmodel.name}")]
+    df1_column = [col for col in df.columns if col.endswith(f" {ymodel.name}")]
     df_noNa = df.dropna().reset_index(drop=True)
     app = Dash(__name__)
     app.layout = html.Div(
         [
-            html.H1(ds_model.name, style={"textAlign": "center"}),
+            html.H1(xmodel.name, style={"textAlign": "center"}),
             html.P("Select variable:"),
             dcc.Dropdown(
                 id="x-axis-dropdown",
                 options=[{"label": col, "value": col} for col in df_column],
-                value=f"hs {ds_model.name}",
+                value=f"hs {xmodel.name}",
                 clearable=False,
                 style={"width": "30%"},
             ),
             dcc.Dropdown(
                 id="y-axis-dropdown",
                 options=[{"label": col, "value": col} for col in df1_column],
-                value=f"hs {ds1_model1.name}",
+                value=f"hs {ymodel.name}",
                 clearable=False,
                 style={"width": "30%"},
             ),
@@ -493,36 +488,24 @@ def scatter_plotter(model, model1):
         Input("x-axis-dropdown", "value"),
         Input("y-axis-dropdown", "value"),
     )
-    def update_graph(x_var, y_var):
-        x_col = f"{x_var}"
-        y_col = f"{y_var}"
-        """
-        Calculates the correlation
-        """
-        correlation = calculate_correlation(df_noNa[x_col], df_noNa[y_col])
-        """
-        Calculates RMSE
-        Calculates SI
-        """
-        RMSE = calculate_RMSE(df_noNa[x_col], df_noNa[y_col])
-        SI = RMSE / df_noNa[x_col].mean()
-        """
-        Stack values and
-        Calculates density.
-        """
-        xy = np.vstack([df_noNa[x_col].values, df_noNa[y_col].values])
+    def update_graph(xvar, yvar):
+        xdata, ydata = df_noNa[xvar].values, df_noNa[yvar].values
+        RMSE = np.sqrt(np.mean((xdata-ydata)**2))
+        R = np.corrcoef(xdata, ydata)[0,1]
+        SI = RMSE / np.mean(xdata)*100
+        xy = np.vstack([xdata, ydata])
         z = gaussian_kde(xy)(xy)
 
-        if x_col not in df.columns or y_col not in df.columns:
+        if xvar not in df.columns or yvar not in df.columns:
             return go.Figure()
         fig = px.scatter(
-            df_noNa, x=x_col, y=y_col, color=z, color_continuous_scale="jet"
+            df_noNa, x=xvar, y=yvar, color=z, color_continuous_scale="jet"
         )
 
-        linear_regression_line(df_noNa[x_col], df_noNa[y_col], fig)
+        linear_regression_line(xdata, ydata, fig)
 
-        x_max = np.ceil(df_noNa[x_col].max())
-        y_max = np.ceil(df_noNa[y_col].max())
+        x_max = np.ceil(np.max(xdata))
+        y_max = np.ceil(np.max(ydata))
 
         x_values = np.linspace(0, np.ceil(x_max), 100)
         y_values = x_values
@@ -533,7 +516,7 @@ def scatter_plotter(model, model1):
         )
 
         x_line = np.linspace(0, np.ceil(x_max), 100)
-        a = np.sum(df_noNa[x_col] * df_noNa[y_col]) / np.sum(df_noNa[x_col] ** 2)
+        a = np.mean(ydata)/np.mean(xdata)
         y = a * x_line
         fig.add_traces(
             go.Scatter(
@@ -553,6 +536,19 @@ def scatter_plotter(model, model1):
             fig.update_layout(
                 xaxis=dict(range=[0, y_max]), yaxis=dict(range=[0, y_max])
             )
+        
+        xunit = sanitation.get_units(xmodel,xvar.split(' ')[0])
+        yunit = sanitation.get_units(ymodel,yvar.split(' ')[0])
+        xvarname = sanitation.get_varname(xmodel,xvar.split(' ')[0])
+        yvarname = sanitation.get_varname(ymodel,yvar.split(' ')[0])
+        text = [f"N={len(xdf)}"]
+        if xunit == yunit:
+            text.append(f"Bias={np.mean(xdata)-np.mean(ydata):.2f}{xunit}")
+            text.append(f"RMSE={RMSE:.2f}{xunit}")
+            text.append(f"SI={SI:.0f}%")
+        text.append(f"r={R:.2f}")
+        text = '\n'.join(text)
+
         fig.update_layout(
             coloraxis_colorbar=dict(title="Density", y=0.45, x=1.015, len=0.9),
             annotations=[
@@ -561,13 +557,7 @@ def scatter_plotter(model, model1):
                     y=0.995,
                     xref="paper",
                     yref="paper",
-                    text=(
-                        f"N = {len(df_noNa[x_col])}<br>"
-                        f"Bias = {df_noNa[x_col].mean() - df_noNa[y_col].mean():.4f}<br>"
-                        f"R\u00b2= {correlation:.4f}<br>"
-                        f"RMSE= {RMSE:.4F}<br>"
-                        f"SI= {SI:.4F}"
-                    ),
+                    text=text,
                     showarrow=False,
                     font=dict(size=16, color="black"),
                     align="left",
@@ -583,4 +573,4 @@ def scatter_plotter(model, model1):
 
     port = random.randint(1000, 9999)
     Timer(1, open_browser, args=[port]).start()
-    app.run_server(debug=False, port=port)
+    app.run(debug=False, port=port)
