@@ -8,7 +8,7 @@ from typing import Callable
 class Matplotlib:
     def __init__(self, data_dict: dict, data_dict2: dict = None):
         self.data_dict = data_dict
-        self.data_dict2 = data_dict2 or {}
+        self.data_dict2 = data_dict2 or data_dict
 
     def wavegrid(
         self,
@@ -180,17 +180,10 @@ class Matplotlib:
         yvar='hs',
         plotter: Callable = matplotlib_functions.scatter_plotter,
     ):
-        if not self.data_dict2:
-            raise ValueError("No second data object provided at initialization!")
         fig, ax = plt.subplots()
         fig_dict = {"fig": fig, "ax": ax}
         fig_dict = plotter(fig_dict, self.data_dict, self.data_dict2, xvar, yvar)
 
-
-class MatplotlibComparison:
-    def __init__(self, model, model1):
-        self.data_dict = model
-        self.data_dict1 = model1
 
 
 

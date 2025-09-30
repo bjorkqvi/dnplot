@@ -451,8 +451,8 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
     """Plots a scatter plot of data from two different objects"""
     
   
-    xmodel = model.get('waveseries')
-    ymodel = model1.get('waveseries')
+    xmodel = model.get('waveseries') or model
+    ymodel = model1.get('waveseries') or model1
     
     xdf = xarray_to_dataframe(xmodel)
     ydf = xarray_to_dataframe(ymodel)
@@ -512,7 +512,7 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
     x_range = np.linspace(0, np.ceil(np.max(xdata)), 100)
     fig_dict["ax"].plot(x_range, x_range, linewidth=0.5, color='k',label="x=y")
 
-    sign = 'x' if intercept >=0 else '-'
+    sign = '+' if intercept >=0 else '-'
     fig_dict["ax"].plot(
         x_range, slope*x_range+intercept, color="red", linewidth=2, label=f"Regression line y={slope:.2f}x{sign}{np.abs(intercept):.2f}"
     )
