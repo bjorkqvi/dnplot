@@ -10,7 +10,7 @@ from matplotlib import cm
 from scipy.stats import gaussian_kde
 
 from dnplot.stats import calculate_RMSE, calculate_correlation
-
+import xarray as xr
 def grid_plotter(fig_dict: dict, data_dict: dict, coastline: bool = None) -> dict:
     """Plot the depth information and land mask. Also plots information about e.g. wind data and spectral points"""
     fig_dict = topo_plotter(fig_dict, data_dict, coastline=coastline)
@@ -436,8 +436,9 @@ def scatter_plotter(fig_dict: dict, model, var):
     plt.show(block=True)
 
 
-def xarray_to_dataframe(model) -> pd.DataFrame:
-    df = model.ds().to_dataframe()
+def xarray_to_dataframe(ds) -> pd.DataFrame:
+   
+    df = ds.to_dataframe()
     df = df.reset_index()
     col_drop = ["lon", "lat", "inds"]
     df = df.drop(col_drop, axis="columns")
@@ -453,7 +454,28 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
   
     xmodel = model.get('waveseries') or model
     ymodel = model1.get('waveseries') or model1
-    
+    if not isinstance(xmodel,xr.Dataset):
+        xmodel = xmodel.ds()
+    if not isinstance(ymodel,xr.Dataset):
+        ymodel = ymodel.ds()
+
+    # Determine units
+
+    xunit = getattr(xmodel.get(xvar), 'units', '')
+    xvarname = (
+        getattr(xmodel.get(xvar), 'long_name', None) or
+        getattr(xmodel.get(xvar), 'standard_name', None) or
+        getattr(xmodel.get(xvar), 'short_name', xvar)
+    )
+
+
+    yunit = getattr(ymodel.get(yvar), 'units', '')
+    yvarname = (
+        getattr(ymodel.get(yvar), 'long_name', None) or
+        getattr(ymodel.get(yvar), 'standard_name', None) or
+        getattr(ymodel.get(yvar), 'short_name', yvar)
+    )
+
     xdf = xarray_to_dataframe(xmodel)
     ydf = xarray_to_dataframe(ymodel)
     combined_df = pd.concat([xdf, ydf], axis=1)
@@ -463,21 +485,6 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
     ydf = combined_df_cleaned.iloc[:, xdf.shape[1] :].reset_index(drop=True)
 
     xdata, ydata = xdf[xvar], ydf[yvar]
-    # Determine units
-    if hasattr(xmodel, 'meta'):
-        if xmodel.meta.get(xvar) is not None:
-            xunit = xmodel.meta.get(xvar).get('units','')
-            xvarname = xmodel.meta.get(xvar).get('long_name',xvar)
-    else:
-        xunit = ''
-        xvarname = xvar
-    if hasattr(ymodel, 'meta'):
-        if ymodel.meta.get(yvar) is not None:
-            yunit = xmodel.meta.get(yvar).get('units','')
-            yvarname = xmodel.meta.get(yvar).get('long_name',yvar)
-    else:
-        yunit=''
-        yvarname = yvar
 
     # Statistics
     RMSE = np.sqrt(np.mean((xdata-ydata)**2))
