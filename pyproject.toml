@@ -1,16 +1,25 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "dnplot"
 version = "0.3.16"
 description = "Plotting of data imported by the dnora package"
 authors = [ { name = "Konstantinos Christakos", email = "konstantinosc@met.no" } , { name = "Jan-Victor Björkqvist", email = "janvb@met.no" }, {name = "Dominykas Jasas", email = "dominykas.jasas@stud.vilniustech.lt"}]
+requires-python = ">=3.9, <3.11"
 dependencies = [ "numpy", "matplotlib", "cartopy", "pandas" ,"plotly", "dash", "scipy", "cmocean", "scikit-learn" ]
 readme = "README.md"
 license = {file = "LICENSE"}
-#[project.optional-dependencies]
-#tests = [ "numpy", "xarray", "pandas", "utm", "geopy" ]
 
 [project.urls]
 repository = "http://github.com/bjorkqvi/dnplot"
 
-# [project.scripts]
-# "sfydata" = "sfy.cli.sfydata:sfy"
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[tool.setuptools]
+license-files = ["LICENSE"]
+
+[tool.setuptools_scm]
+write_to = "dnplot/_version.py"
