@@ -6,7 +6,7 @@ from ..defaults import default_variable, DEFAULT_VARIABLE_DATA
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from matplotlib.colors import Normalize
-from matplotlib import cm
+import cmocean.cm
 from scipy.stats import gaussian_kde
 from dnplot import sanitation 
 from dnplot.stats import calculate_RMSE, calculate_correlation
@@ -476,13 +476,11 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
     xy = np.vstack([xdata, ydata])
     z = gaussian_kde(xy)(xy)
     norm = Normalize(vmin=z.min(), vmax=z.max())
-    cmap = cm.Blues
-    sm = cm.ScalarMappable(cmap=cmap, norm=norm)
-    sm.set_array([])
+    cmap = cmocean.cm.dense
 
     title = f"{xmodel.name} ({xvar}) vs {ymodel.name} ({yvar})"
     fig_dict["ax"].set_title(title, fontsize=14)
-    fig_dict["ax"].scatter(xdata, ydata, c=z, cmap=cmap,  norm=norm,s=50)
+    cont = fig_dict["ax"].scatter(xdata, ydata, c=z, cmap=cmap,  norm=norm,s=50)
     
     maxval = np.maximum(np.max(xdata), np.max(ydata))
     fig_dict["ax"].set_xlim([0, maxval])
@@ -490,14 +488,14 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
 
     slope, intercept = np.polyfit(xdata, ydata,1)
     x_range = np.linspace(0, np.ceil(np.max(xdata)), 100)
-    fig_dict["ax"].plot(x_range, x_range, linewidth=0.5, color='k',label="x=y")
+    fig_dict["ax"].plot(x_range, x_range, linewidth=1, color='k',linestyle='--',label="x=y")
 
     sign = '+' if intercept >=0 else '-'
     fig_dict["ax"].plot(
-        x_range, slope*x_range+intercept, color="red", linewidth=2, label=f"Regression line y={slope:.2f}x{sign}{np.abs(intercept):.2f}"
+        x_range, slope*x_range+intercept, color="r", linewidth=2, label=f"Regression line y={slope:.2f}x{sign}{np.abs(intercept):.2f}"
     )
     slope_1p = np.mean(ydata)/np.mean(xdata)
-    fig_dict["ax"].plot(x_range, x_range*slope_1p, linewidth=2, color = 'm',label=f"One parameter line y={slope_1p:.2f}x ")
+    fig_dict["ax"].plot(x_range, x_range*slope_1p, linewidth=2, color = 'k',label=f"One parameter line y={slope_1p:.2f}x ")
 
     fig_dict["ax"].set_xlabel(
         f"{xmodel.name} {xvarname}\n ({xunit})"
@@ -507,7 +505,7 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
     )
 
     # color bar
-    cbar = plt.colorbar(sm, ax=fig_dict["ax"])
+    cbar = plt.colorbar(cont, ax=fig_dict["ax"])
     cbar.set_label("Density", rotation=270, labelpad=15)
 
     props = dict(boxstyle="square", facecolor="white", alpha=0.6)

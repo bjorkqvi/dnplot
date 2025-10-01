@@ -188,8 +188,9 @@ class Matplotlib:
 
 
 class Plotly:
-    def __init__(self, model):
-        self.data_dict = model
+    def __init__(self, data_dict: dict, data_dict2: dict = None):
+        self.data_dict = data_dict
+        self.data_dict2 = data_dict2 or data_dict
 
     def waveseries(
         self, use_dash, plotter: Callable = plotly_functions.waveseries_plotter
@@ -199,11 +200,6 @@ class Plotly:
     def spectra(self, plotter: Callable = plotly_functions.spectra_plotter):
         fig_dict = plotter(self.data_dict)
 
-
-class Plotly1:
-    def __init__(self, model, model1):
-        self.data_dict = model
-        self.data_dict1 = model1
-
     def scatter(self, plotter: Callable = plotly_functions.scatter_plotter):
-        fig_dict = plotter(self.data_dict, self.data_dict1)
+        fig_dict = plotter(self.data_dict, self.data_dict2)
+

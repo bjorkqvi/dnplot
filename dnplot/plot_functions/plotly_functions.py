@@ -13,6 +13,7 @@ import random
 from flask import Flask
 from dnplot.stats import calculate_correlation, calculate_RMSE
 from dnplot import sanitation
+import cmocean.cm
 def xarray_to_dataframe(model) -> pd.DataFrame:
     df = model.ds().to_dataframe()
     df = df.reset_index()
@@ -498,47 +499,45 @@ def scatter_plotter(model, model1):
 
         if xvar not in df.columns or yvar not in df.columns:
             return go.Figure()
+        
+        # Add scatter
+        xunit = sanitation.get_units(xmodel,xvar.split(' ')[0])
+        yunit = sanitation.get_units(ymodel,yvar.split(' ')[0])
         fig = px.scatter(
-            df_noNa, x=xvar, y=yvar, color=z, color_continuous_scale="jet"
+           df_noNa, x=xvar, y=yvar, color=z, color_continuous_scale='blues', labels={
+                xvar: f"{xvar} ({xunit})",
+                yvar: f"{yvar} ({yunit})"}
         )
 
         linear_regression_line(xdata, ydata, fig)
 
-        x_max = np.ceil(np.max(xdata))
-        y_max = np.ceil(np.max(ydata))
-
-        x_values = np.linspace(0, np.ceil(x_max), 100)
-        y_values = x_values
+        # Lines
+        x_values = np.linspace(0, np.ceil(np.max(xdata)), 100)
+       
         fig.add_traces(
             go.Scatter(
-                x=x_values, y=y_values, mode="lines", name="x=y", visible="legendonly"
+                x=x_values, y=x_values, mode="lines", name="x=y", visible="legendonly"
             )
         )
-
-        x_line = np.linspace(0, np.ceil(x_max), 100)
+        
         a = np.mean(ydata)/np.mean(xdata)
-        y = a * x_line
         fig.add_traces(
             go.Scatter(
-                x=x_line,
-                y=y,
+                x=x_values,
+                y=a * x_values,
                 mode="lines",
                 name="one-parameter-linear regression",
                 visible="legendonly",
             )
         )
 
-        if x_max > y_max:
-            fig.update_layout(
-                yaxis=dict(range=[0, x_max]), xaxis=dict(range=[0, x_max])
-            )
-        else:
-            fig.update_layout(
-                xaxis=dict(range=[0, y_max]), yaxis=dict(range=[0, y_max])
-            )
+        maxval = np.maximum(np.max(xdata), np.max(ydata))
+        fig.update_layout(
+            yaxis=dict(range=[0, maxval]), xaxis=dict(range=[0, maxval])
+        )
+
         
-        xunit = sanitation.get_units(xmodel,xvar.split(' ')[0])
-        yunit = sanitation.get_units(ymodel,yvar.split(' ')[0])
+
         xvarname = sanitation.get_varname(xmodel,xvar.split(' ')[0])
         yvarname = sanitation.get_varname(ymodel,yvar.split(' ')[0])
         text = [f"N={len(xdf)}"]
@@ -547,7 +546,7 @@ def scatter_plotter(model, model1):
             text.append(f"RMSE={RMSE:.2f}{xunit}")
             text.append(f"SI={SI:.0f}%")
         text.append(f"r={R:.2f}")
-        text = '\n'.join(text)
+        text = '; '.join(text)
 
         fig.update_layout(
             coloraxis_colorbar=dict(title="Density", y=0.45, x=1.015, len=0.9),
