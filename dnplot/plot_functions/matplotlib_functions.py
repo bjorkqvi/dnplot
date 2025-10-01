@@ -11,6 +11,7 @@ from scipy.stats import gaussian_kde
 from dnplot import sanitation 
 from dnplot.stats import calculate_RMSE, calculate_correlation
 import xarray as xr
+
 def grid_plotter(fig_dict: dict, data_dict: dict, coastline: bool = None) -> dict:
     """Plot the depth information and land mask. Also plots information about e.g. wind data and spectral points"""
     fig_dict = topo_plotter(fig_dict, data_dict, coastline=coastline)
@@ -244,109 +245,94 @@ def spectra_plotter(fig_dict: dict, model) -> dict:
     return fig_dict
 
 
-def waveseries_plotter(model, var: list[str]):
-    ts = model["waveseries"]
-    if len(var) < 4:
-        fig, axes = plt.subplots(len(var), 1)
-        fig.suptitle(ts.name, fontsize=16)
-        axes = axes if len(var) > 1 else [axes]
-        for i, item in enumerate(var):
-            if isinstance(item, tuple):
-                var1, var2 = item
-                ax = axes[i]
-                ax.plot(
-                    ts.get("time"),
-                    ts.get(var1),
-                    color="b",
-                    label=f"{var1} ({ts.meta.get(var1)['units']})",
-                )
+def waveseries_plotter(model, model1, var: list[str], separate_plots: bool):
+    """var = ['hs', 'tp'] or ['hs',('tp','tm01')]
 
-                ax.set_ylabel(
-                    f"{ts.meta.get(var1)['long_name']}\n ({ts.meta.get(var1)['units']})",
-                    color="b",
-                )
-                ax.set_xlabel("UTC", fontsize=12)
-                ax2 = ax.twinx()
-                ax2.plot(
-                    ts.get("time"),
-                    ts.get(var2),
-                    color="g",
-                    label=f"{var2} ({ts.meta.get(var2)['units']})",
-                )
-                ax2.set_ylabel(
-                    f"{ts.meta.get(var2)['long_name']}\n ({ts.meta.get(var2)['units']})",
-                    color="g",
-                )
-                lines1, labels1 = ax.get_legend_handles_labels()
-                lines2, labels2 = ax2.get_legend_handles_labels()
-                ax2.legend(lines1 + lines2, labels1 + labels2)
-                ax.grid(True)
+    use 'separate_plots = True' to get separate figures for each parameter.
+    Default is separate_plots = True for more than 4 parameters."""
+    
+    if separate_plots is None:
+        separate_plots = len(var) > 4
 
-            else:
-                axes[i].plot(
-                    ts.get("time"),
-                    ts.get(item),
-                    color="b",
-                    label=f"{item} ({ts.meta.get(item)['units']})",
-                )
-                axes[i].set_ylabel(
-                    f"{ts.meta.get(item)['long_name']} \n ({ts.meta.get(item)['units']})"
-                )
-                axes[i].set_xlabel("UTC", fontsize=12)
-                axes[i].legend()
-                axes[i].grid(True)
-        plt.tight_layout()
-        plt.show()
+    xmodel = sanitation.force_to_ds(model)
+    ymodel = sanitation.force_to_ds(model1)
 
+    if separate_plots:
+        axes = []
+        for i in range(len(var)):
+            __, ax = plt.subplots()
+            axes.append(ax)        
     else:
-        for item in var:
-            fig, ax = plt.subplots()
-            if isinstance(item, tuple):
-                var1, var2 = item
-                ax.plot(
+        __, axes = plt.subplots(len(var), 1)
+        axes = axes if len(var) > 1 else [axes]
+
+    # Get a list of axes, keeping in mind that we can have twin axes if we give a tuple ('tp','tm01') in vars        
+    list_of_axes = []
+    list_of_variables = []
+    list_of_colors = []
+    draw_legend = []
+    for i, axe in enumerate(axes):
+        list_of_axes.append(axe)
+        if isinstance(var[i], tuple) or isinstance(var[i], list):
+            list_of_axes.append(axe.twinx())
+            if len(var[i])>2:
+                raise ValueError(f"Can give a maximum of 2 parameters to plot in same plot! ({var[i]})")
+            list_of_variables.append(var[i][0])
+            list_of_variables.append(var[i][1])
+            list_of_colors.append(('b','r'))
+            list_of_colors.append(('g','m'))
+            draw_legend.append(False)
+            draw_legend.append(True)
+        else:
+            list_of_variables.append(var[i])
+            list_of_colors.append(('b','r'))
+            draw_legend.append(True)
+
+
+    lines, labels = [], []
+    for v, a, c, lgnd in zip(list_of_variables, list_of_axes, list_of_colors, draw_legend):
+        ylabel_set = False
+        for i, ts in enumerate([xmodel, ymodel]):
+
+            varname = sanitation.get_varname(ts,v)
+            unit = sanitation.get_units(ts,v)
+            
+            if ts.get(v) is not None:
+                a.plot(
                     ts.get("time"),
-                    ts.get(var1),
-                    color="b",
-                    label=f"{var1} ({ts.meta.get(var1)['units']})",
+                    ts.get(v),
+                    color=c[i],
+                    label=f"{ts.name} {v} ({unit})",
                 )
 
-                ax.set_ylabel(
-                    f"{ts.meta.get(var1)['long_name']}\n ({ts.meta.get(var1)['units']})",
-                    color="b",
-                )
-                ax.set_xlabel("UTC", fontsize=12)
-                ax2 = ax.twinx()
-                ax2.plot(
-                    ts.get("time"),
-                    ts.get(var2),
-                    color="g",
-                    label=f"{var2} ({ts.meta.get(var2)['units']})",
-                )
-                ax2.set_ylabel(
-                    f"{ts.meta.get(var2)['long_name']}\n ({ts.meta.get(var2)['units']})",
-                    color="g",
-                )
-                lines1, labels1 = ax.get_legend_handles_labels()
-                lines2, labels2 = ax2.get_legend_handles_labels()
-                ax2.legend(lines1 + lines2, labels1 + labels2)
-                ax.grid(True)
-            else:
-                ax.plot(
-                    ts.get("time"),
-                    ts.get(item),
-                    color="b",
-                    label=f"{item} ({ts.meta.get(item)['units']})",
-                )
-                ax.set_xlabel("UTC", fontsize=12)
-                ax.set_ylabel(
-                    f"{ts.meta.get(item)['long_name']} \n ({ts.meta.get(item)['units']})"
-                )
-                ax.legend()
-                ax.grid(True)
-            ax.set_title(ts.name, fontsize=16)
+                # Set it only once so we get the first color
+                if not ylabel_set:
+                    a.set_ylabel(
+                        f"{varname} ({unit})",
+                        color=c[0],
+                    )
+                    ylabel_set = True
 
-        plt.tight_layout()
-        plt.show()
+        # If not set, then set withouth data (then missing units etc.)
+        if not ylabel_set:
+            a.set_ylabel(
+                f"{varname} ({unit})",
+                color=c[0],
+            )
+        a.grid(True)
+        
+        # This is to handle twin axes correctly
+        li, la = a.get_legend_handles_labels()
+        lines += li
+        labels += la
+        if lgnd:
+            a.legend(lines, labels)
+            lines, labels = [], []
+        
+
+
+    plt.tight_layout()
+    plt.show()
 
 
 def spectra1d_plotter(fig_dict: dict, model) -> dict:

@@ -8,7 +8,7 @@ from typing import Callable
 class Matplotlib:
     def __init__(self, data_dict: dict, data_dict2: dict = None):
         self.data_dict = data_dict
-        self.data_dict2 = data_dict2 or data_dict
+        self.data_dict2 = data_dict2 or {}
 
     def wavegrid(
         self,
@@ -157,9 +157,10 @@ class Matplotlib:
         self,
         var=["hs", ("tm01", "tm02"), "dirm"],
         plotter: Callable = matplotlib_functions.waveseries_plotter,
+        separate_plots: bool = None, 
         test_mode: bool = False,
     ):
-        fig_dict = plotter(self.data_dict, var)
+        fig_dict = plotter(self.data_dict, self.data_dict2, var, separate_plots)
 
     def spectra1d(
         self,
@@ -182,7 +183,8 @@ class Matplotlib:
     ):
         fig, ax = plt.subplots()
         fig_dict = {"fig": fig, "ax": ax}
-        fig_dict = plotter(fig_dict, self.data_dict, self.data_dict2, xvar, yvar)
+        data_dict2 = self.data_dict2 or self.data_dict
+        fig_dict = plotter(fig_dict, self.data_dict, data_dict2, xvar, yvar)
 
 
 
@@ -193,9 +195,9 @@ class Plotly:
         self.data_dict2 = data_dict2 or data_dict
 
     def waveseries(
-        self, use_dash, plotter: Callable = plotly_functions.waveseries_plotter
+        self, use_dash: bool=False, plotter: Callable = plotly_functions.waveseries_plotter
     ):
-        fig_dict = plotter(self.data_dict, use_dash)
+        fig_dict = plotter(self.data_dict, self.data_dict2, use_dash)
 
     def spectra(self, plotter: Callable = plotly_functions.spectra_plotter):
         fig_dict = plotter(self.data_dict)
