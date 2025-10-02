@@ -251,13 +251,14 @@ def waveseries_plotter_dash(model, model1):
                 style={
                     "display": "flex",
                     "flexDirection": "column",
-                    "width": "75",
+                    "width": "75%",
                     "float": "left",
                     "marginTop": "200px"
                 },
             ),
             html.Label(f"{xmodel_all.name} index"),
-            dcc.Slider(
+            
+            html.Div([dcc.Slider(
                 min=0,
                 max=len(xlon)-1,
                 step=1,
@@ -267,10 +268,12 @@ def waveseries_plotter_dash(model, model1):
                 persistence=True,
                 persistence_type="session",
                 id="xslider",
-            ),
+ 
+            )],
+            style={'width':'75%'}),
 
             html.Label(slider_label),
-            dcc.Slider(
+            html.Div([dcc.Slider(
                 min=0,
                 max=slider_len,
                 step=1,
@@ -280,7 +283,9 @@ def waveseries_plotter_dash(model, model1):
                 persistence=True,
                 persistence_type="session",
                 id="yslider",
-            ),
+ 
+            )],
+            style={'width':'75%'}),
             html.Div(
                 [dcc.Graph(id="map")],
                 style={
@@ -326,8 +331,8 @@ def waveseries_plotter_dash(model, model1):
 
 
         subfig.update_layout(
-            width=1300,
-            height=900,
+            #width=1300,
+            #height=900,
             margin=dict(l=0, r=0, t=50, b=50),
         )
         fig = go.Figure(
