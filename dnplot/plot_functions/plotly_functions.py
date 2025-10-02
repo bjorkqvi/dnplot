@@ -178,9 +178,47 @@ def waveseries_plotter_basic(model, model1):
     fig.show()
 
 
-def waveseries_plotter_dash(model):
-    ts = model["waveseries"]
-    var = xarray_to_dataframe(ts)
+
+
+def waveseries_plotter_dash(model, model1):
+    xmodel_all = sanitation.force_to_ds(model)
+    
+    
+    xlon, xlat = xmodel_all.lon.values, xmodel_all.lat.values
+    
+    ymodel_all = sanitation.force_to_ds(model1)
+
+
+    
+    
+    xmodel = xmodel_all.sel(inds=0)
+    xdf = sanitation.xarray_to_dataframe(xmodel)
+    if ymodel_all is not None:
+        ylon, ylat = ymodel_all.lon.values, ymodel_all.lat.values
+        ymodel = ymodel_all.sel(inds=0)
+    else:
+        ymodel = None
+        
+    
+    
+    if ymodel is not None:
+        
+        ydf = sanitation.xarray_to_dataframe(ymodel)
+        xdf = xdf.set_index("time").add_suffix(f" {xmodel.name}").reset_index()
+        ydf = ydf.set_index("time").add_suffix(f" {ymodel.name}").reset_index()
+        df =  pd.merge(xdf,ydf,on="time")
+    else:
+        ydf = xdf
+        df = xdf
+
+
+    xvariables = [col for col in xdf if col != 'time']
+    yvariables = [col for col in ydf if col != 'time']
+    x_start_val = xvariables[0]
+    if ymodel is not None:
+        y_start_val = yvariables[0]
+    else:
+        y_start_val = 'None'
 
     app = Dash(__name__)
     app.layout = html.Div(
@@ -189,16 +227,16 @@ def waveseries_plotter_dash(model):
             html.P("Select variable:"),
             dcc.Dropdown(
                 id="waveseries-1",
-                options=[{"label": val, "value": val} for val in ts.core.data_vars()],
-                value="hs",
+                options=[{"label": val, "value": val} for val in xvariables],
+                value=x_start_val,
                 clearable=False,
                 style={"width": "30%"},
             ),
             dcc.Dropdown(
                 id="waveseries-2",
                 options=[{"label": "None", "value": "None"}]
-                + [{"label": val, "value": val} for val in ts.core.data_vars()],
-                value="None",
+                + [{"label": val, "value": val} for val in yvariables],
+                value=y_start_val,
                 clearable=False,
                 style={"width": "30%"},
             ),
@@ -212,6 +250,30 @@ def waveseries_plotter_dash(model):
                     "width": "75",
                     "float": "left",
                 },
+            ),
+            html.Label(f"{xmodel.name}"),
+            dcc.Slider(
+                min=0,
+                max=len(xlon),
+                step=1,
+                value=0,
+                tooltip={"placement": "bottom", "always_visible": True},
+                updatemode="drag",
+                persistence=True,
+                persistence_type="session",
+                id="xslider",
+            ),
+            html.Label(f"{ymodel.name}"),
+            dcc.Slider(
+                min=0,
+                max=len(ylon),
+                step=1,
+                value=0,
+                tooltip={"placement": "bottom", "always_visible": True},
+                updatemode="drag",
+                persistence=True,
+                persistence_type="session",
+                id="yslider",
             ),
             html.Div(
                 [dcc.Graph(id="map")],
@@ -231,13 +293,16 @@ def waveseries_plotter_dash(model):
         Output("map", "figure"),
         Input("waveseries-1", "value"),
         Input("waveseries-2", "value"),
+        #Input("inds_slider", "value")
     )
-    def display_time_series(var1, var2):
+    def display_time_series(var1, var2):#, inds_r):
+        inds_x = 0
+        inds_y = 0
         subfig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig = px.line(var, x="time", y=var1)
+        fig = px.line(df, x="time", y=var1)
         subfig.add_trace(fig.data[0], secondary_y=False)
         if var2 != "None":
-            fig2 = px.line(var, x="time", y=var2)
+            fig2 = px.line(df, x="time", y=var2)
             subfig.add_trace(fig2.data[0], secondary_y=True)
             subfig.update_traces(line_color="blue", secondary_y=False)
             subfig.update_traces(line_color="red", secondary_y=True)
@@ -253,24 +318,36 @@ def waveseries_plotter_dash(model):
             margin=dict(l=0, r=0, t=50, b=50),
         )
         fig = go.Figure(
-            go.Scattermapbox(
-                lat=ts.lat(),
-                lon=ts.lon(),
+
+        )
+        fig.add_trace(go.Scattermapbox(
+                lat=xlat,
+                lon=xlon,
                 mode="markers",
                 marker=dict(size=12),
-            )
-        )
+                name=xmodel.name
+            ))
+        if ymodel is not None:
+            fig.add_trace(go.Scattermapbox(
+                lat=ylat,
+                lon=ylon,
+                mode="markers",
+                marker=dict(size=12, color="red"),
+                name=ymodel.name
+
+            ))
+
         fig.update_layout(
             mapbox=dict(
                 style="carto-positron",
-                center=dict(lat=int(ts.lat()), lon=int(ts.lon())),
+                center=dict(lat=int(ylat), lon=int(ylon)),
                 zoom=6,
             ),
             width=450,
             height=850,
             margin=dict(l=0, r=0, t=50, b=50),
         )
-        title = f"{ts.name} Waveseries"
+        title = f"{xmodel.name} Waveseries"
         return subfig, title, fig
 
     port = random.randint(1000, 9999)
@@ -280,7 +357,7 @@ def waveseries_plotter_dash(model):
 
 def waveseries_plotter(model, model1, use_dash: bool):
     if use_dash:
-        waveseries_plotter_dash(model)
+        waveseries_plotter_dash(model, model1)
     else:
         waveseries_plotter_basic(model, model1)
 
