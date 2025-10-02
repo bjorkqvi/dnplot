@@ -181,46 +181,50 @@ def waveseries_plotter_basic(model, model1):
 
 
 def waveseries_plotter_dash(model, model1):
+    def get_one_point_merged_datafram(xmodel_all, ymodel_all, inds_x, inds_y):
+        xmodel = xmodel_all.sel(inds=inds_x)
+        xdf = sanitation.xarray_to_dataframe(xmodel)
+        if ymodel_all is not None:
+            ymodel = ymodel_all.sel(inds=inds_y)
+        else:
+            ymodel = None
+       
+        if ymodel is not None:
+            ydf = sanitation.xarray_to_dataframe(ymodel)
+            xdf = xdf.set_index("time").add_suffix(f" {xmodel.name}").reset_index()
+            ydf = ydf.set_index("time").add_suffix(f" {ymodel.name}").reset_index()
+            df =  pd.merge(xdf,ydf,on="time")
+        else:
+            ydf = xdf
+            df = xdf
+
+        return xdf, ydf, df
+
+    
     xmodel_all = sanitation.force_to_ds(model)
-    
-    
     xlon, xlat = xmodel_all.lon.values, xmodel_all.lat.values
-    
     ymodel_all = sanitation.force_to_ds(model1)
-
-
-    
-    
-    xmodel = xmodel_all.sel(inds=0)
-    xdf = sanitation.xarray_to_dataframe(xmodel)
     if ymodel_all is not None:
         ylon, ylat = ymodel_all.lon.values, ymodel_all.lat.values
-        ymodel = ymodel_all.sel(inds=0)
-    else:
-        ymodel = None
-        
     
-    
-    if ymodel is not None:
-        
-        ydf = sanitation.xarray_to_dataframe(ymodel)
-        xdf = xdf.set_index("time").add_suffix(f" {xmodel.name}").reset_index()
-        ydf = ydf.set_index("time").add_suffix(f" {ymodel.name}").reset_index()
-        df =  pd.merge(xdf,ydf,on="time")
-    else:
-        ydf = xdf
-        df = xdf
-
-
+    xdf, ydf, df = get_one_point_merged_datafram(xmodel_all, ymodel_all, inds_x=0, inds_y=0)
     xvariables = [col for col in xdf if col != 'time']
     yvariables = [col for col in ydf if col != 'time']
     x_start_val = xvariables[0]
-    if ymodel is not None:
+    if ymodel_all is not None:
         y_start_val = yvariables[0]
     else:
         y_start_val = 'None'
+    if ymodel_all is not None:
+        slider_label = f"{ymodel_all.name} index"
+        slider_len = len(ylon)-1
+    else:
+        slider_label = 'Inactive'
+        slider_len=0
+
 
     app = Dash(__name__)
+
     app.layout = html.Div(
         [
             html.H1(id="title", style={"textAlign": "center"}),
@@ -249,12 +253,13 @@ def waveseries_plotter_dash(model, model1):
                     "flexDirection": "column",
                     "width": "75",
                     "float": "left",
+                    "marginTop": "200px"
                 },
             ),
-            html.Label(f"{xmodel.name}"),
+            html.Label(f"{xmodel_all.name} index"),
             dcc.Slider(
                 min=0,
-                max=len(xlon),
+                max=len(xlon)-1,
                 step=1,
                 value=0,
                 tooltip={"placement": "bottom", "always_visible": True},
@@ -263,10 +268,11 @@ def waveseries_plotter_dash(model, model1):
                 persistence_type="session",
                 id="xslider",
             ),
-            html.Label(f"{ymodel.name}"),
+
+            html.Label(slider_label),
             dcc.Slider(
                 min=0,
-                max=len(ylon),
+                max=slider_len,
                 step=1,
                 value=0,
                 tooltip={"placement": "bottom", "always_visible": True},
@@ -293,11 +299,13 @@ def waveseries_plotter_dash(model, model1):
         Output("map", "figure"),
         Input("waveseries-1", "value"),
         Input("waveseries-2", "value"),
-        #Input("inds_slider", "value")
+        Input("xslider", "value"),
+        Input("yslider", "value"),
+        Input('map','relayoutData'),
     )
-    def display_time_series(var1, var2):#, inds_r):
-        inds_x = 0
-        inds_y = 0
+    def display_time_series(var1, var2, inds_x, inds_y, relayout_data):#, inds_r):
+        
+        __, __, df = get_one_point_merged_datafram(xmodel_all, ymodel_all, inds_x, inds_y)
         subfig = make_subplots(specs=[[{"secondary_y": True}]])
         fig = px.line(df, x="time", y=var1)
         subfig.add_trace(fig.data[0], secondary_y=False)
@@ -308,10 +316,15 @@ def waveseries_plotter_dash(model, model1):
             subfig.update_traces(line_color="red", secondary_y=True)
             subfig.update_xaxes(minor=dict(ticks="inside", showgrid=True))
             subfig.update_yaxes(secondary_y=True, showgrid=False)
-            subfig.update_layout(xaxis_title="UTC", yaxis_title=var1)
+            
             subfig.update_yaxes(title_text=var2, secondary_y=True)
+
+        if ymodel_all is None:
+            subfig.update_layout(xaxis_title="UTC", yaxis_title=var1, title=f'{xmodel_all.name} (lat: {xlat[inds_x]:.3f}, lon: {xlon[inds_x]:.3f})')
         else:
-            subfig.update_layout(xaxis_title="UTC", yaxis_title=var1)
+            subfig.update_layout(xaxis_title="UTC", yaxis_title=var1, title=f'{xmodel_all.name} (lat: {xlat[inds_x]:.3f}, lon: {xlon[inds_x]:.3f}); {ymodel_all.name} (lat: {ylat[inds_y]:.3f}, lon: {ylon[inds_y]:.3f})')
+
+
         subfig.update_layout(
             width=1300,
             height=900,
@@ -321,33 +334,81 @@ def waveseries_plotter_dash(model, model1):
 
         )
         fig.add_trace(go.Scattermapbox(
-                lat=xlat,
-                lon=xlon,
-                mode="markers",
-                marker=dict(size=12),
-                name=xmodel.name
-            ))
-        if ymodel is not None:
+            lat=xlat,
+            lon=xlon,
+            mode="markers",
+            marker=dict(
+                size=12,
+                color=[
+                    "blue" if i == inds_x else "darkblue"
+                    for i in range(len(xlat))
+                ]
+            ),
+            name=xmodel_all.name
+        ))
+        if ymodel_all is not None:
             fig.add_trace(go.Scattermapbox(
                 lat=ylat,
                 lon=ylon,
                 mode="markers",
-                marker=dict(size=12, color="red"),
-                name=ymodel.name
-
+                marker=dict(
+                    size=12,
+                    color=[
+                        "red" if i == inds_y else "darkred"
+                        for i in range(len(ylat))
+                    ]
+                ),
+                name=ymodel_all.name
             ))
+
+        # Default values for zoom and center
+        zoom = 5
+        center = dict(lat=np.mean(xlat), lon=np.mean(xlon))
+
+        # Extract zoom and center from relayoutData if available
+        if relayout_data:
+            zoom = relayout_data.get("mapbox.zoom", zoom)
+            center = relayout_data.get("mapbox.center", center)
 
         fig.update_layout(
             mapbox=dict(
                 style="carto-positron",
-                center=dict(lat=int(ylat), lon=int(ylon)),
-                zoom=6,
+                zoom=zoom,
+                center=center,
             ),
-            width=450,
+            width=850,
             height=850,
             margin=dict(l=0, r=0, t=50, b=50),
         )
-        title = f"{xmodel.name} Waveseries"
+        # nonlocal first_plot
+        # if first_plot:
+        #     fig.update_layout(
+        #         mapbox=dict(
+        #             style="carto-positron",
+        #             zoom=fig.layout.mapbox.zoom if 'zoom' in fig.layout.mapbox else 6,  # Fallback to default zoom
+        #             center=fig.layout.mapbox.center if 'center' in fig.layout.mapbox else dict(lat=0, lon=0),  # Fallback to default center
+        #         ),
+        #         width=850,
+        #         height=850,
+        #         margin=dict(l=0, r=0, t=50, b=50),
+        #     )
+        #     first_plot=False
+        # else:
+        #     fig.update_layout(
+        #         mapbox=dict(
+        #             style="carto-positron",
+        #             center=fig.layout.mapbox.center,
+        #             zoom= fig.layout.mapbox.zoom
+        #         ),
+        #         width=850,
+        #         height=850,
+        #         margin=dict(l=0, r=0, t=50, b=50),
+        #     )
+        #     first_plot=False
+        if ymodel_all is not None:
+            title = f"{xmodel_all.name} and {ymodel_all.name} Waveseries"
+        else:
+            title = f"{xmodel_all.name} Waveseries"
         return subfig, title, fig
 
     port = random.randint(1000, 9999)
