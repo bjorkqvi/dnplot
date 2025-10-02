@@ -144,23 +144,37 @@ def open_browser(port):
         webbrowser.open_new(f"http://127.0.0.1:{port}/")
 
 
-def waveseries_plotter_basic(model):
-    ts = model["waveseries"]
+def waveseries_plotter_basic(model, model1):
+    xmodel = sanitation.force_to_ds(model)
+    xdf = sanitation.xarray_to_dataframe(xmodel)
+    ymodel = sanitation.force_to_ds(model1)
+    if ymodel is not None:
+        ydf = sanitation.xarray_to_dataframe(ymodel)
+
+    if ymodel is not None:
+        df = pd.merge(
+            xdf.set_index("time").add_suffix(f" {xmodel.name}").reset_index(),
+            ydf.set_index("time").add_suffix(f" {ymodel.name}").reset_index(),
+            on="time",
+        )
+    else:
+        df = xdf
+
+
     fig = go.Figure()
 
-    variables = [col for col in ts.core.data_vars()]
-
+    variables = [col for col in df if col != 'time']
     for variable in variables:
         trace = go.Scatter(
-            x=ts.get("time"),
-            y=ts.get(variable),
+            x=df["time"],
+            y=df[variable],
             mode="lines",
             name=variable,
             visible="legendonly",
         )
         fig.add_trace(trace)
 
-    fig.update_layout(title=f"{ts.name}", xaxis_title="UTC", yaxis_title="Values")
+    fig.update_layout(title=f"{xmodel.name}", xaxis_title="UTC", yaxis_title="Values")
     fig.show()
 
 
@@ -264,11 +278,11 @@ def waveseries_plotter_dash(model):
     app.run(debug=False, port=port)
 
 
-def waveseries_plotter(model, use_dash: bool):
+def waveseries_plotter(model, model1, use_dash: bool):
     if use_dash:
         waveseries_plotter_dash(model)
     else:
-        waveseries_plotter_basic(model)
+        waveseries_plotter_basic(model, model1)
 
 
 def create_spectra_app_layout(

@@ -200,8 +200,7 @@ class Matplotlib:
 class Plotly:
     def __init__(self, data_dict: dict, data_dict2: dict = None):
         self.data_dict = data_dict
-        self.data_dict2 = data_dict2 or data_dict
-
+        self.data_dict2 = data_dict2 or {}
     def waveseries(
         self, use_dash: bool=False, plotter: Callable = plotly_functions.waveseries_plotter
     ):
