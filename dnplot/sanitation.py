@@ -33,3 +33,23 @@ def xarray_to_dataframe(ds) -> pd.DataFrame:
     df = df.resample("h").asfreq()
     df = df.reset_index()
     return df
+
+
+def get_one_point_merged_dataframe(xmodel_all, ymodel_all, inds_x, inds_y):
+    xmodel = xmodel_all.sel(inds=inds_x)
+    xdf = xarray_to_dataframe(xmodel)
+    if ymodel_all is not None:
+        ymodel = ymodel_all.sel(inds=inds_y)
+    else:
+        ymodel = None
+    
+    if ymodel is not None:
+        ydf = xarray_to_dataframe(ymodel)
+        xdf = xdf.set_index("time").add_suffix(f" {xmodel.name}").reset_index()
+        ydf = ydf.set_index("time").add_suffix(f" {ymodel.name}").reset_index()
+        df =  pd.merge(xdf,ydf,on="time")
+    else:
+        ydf = xdf
+        df = xdf
+
+    return xdf, ydf, df

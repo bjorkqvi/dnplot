@@ -1,16 +1,17 @@
-from ..draw_functions import draw
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
+import xarray as xr
 import numpy as np
-from ..defaults import default_variable, DEFAULT_VARIABLE_DATA
 import pandas as pd
-from sklearn.linear_model import LinearRegression
+from scipy.stats import gaussian_kde
+
 from matplotlib.colors import Normalize
 import cmocean.cm
-from scipy.stats import gaussian_kde
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
+
 from dnplot import sanitation 
 from dnplot.stats import calculate_RMSE, calculate_correlation
-import xarray as xr
+from dnplot.defaults import default_variable, DEFAULT_VARIABLE_DATA
+from dnplot.draw_functions import draw
 
 def grid_plotter(fig_dict: dict, data_dict: dict, coastline: bool = None) -> dict:
     """Plot the depth information and land mask. Also plots information about e.g. wind data and spectral points"""

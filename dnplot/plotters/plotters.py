@@ -207,7 +207,7 @@ class Plotly:
         fig_dict = plotter(self.data_dict, self.data_dict2, plain)
 
     def spectra(self, plotter: Callable = plotly_functions.spectra_plotter):
-        fig_dict = plotter(self.data_dict)
+        fig_dict = plotter(self.data_dict, self.data_dict2)
 
     def scatter(self, plotter: Callable = plotly_functions.scatter_plotter):
         fig_dict = plotter(self.data_dict, self.data_dict2)
