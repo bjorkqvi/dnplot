@@ -202,9 +202,9 @@ class Plotly:
         self.data_dict = data_dict
         self.data_dict2 = data_dict2 or {}
     def waveseries(
-        self, use_dash: bool=False, plotter: Callable = plotly_functions.waveseries_plotter
+        self, plain: bool=False, plotter: Callable = plotly_functions.waveseries_plotter
     ):
-        fig_dict = plotter(self.data_dict, self.data_dict2, use_dash)
+        fig_dict = plotter(self.data_dict, self.data_dict2, plain)
 
     def spectra(self, plotter: Callable = plotly_functions.spectra_plotter):
         fig_dict = plotter(self.data_dict)

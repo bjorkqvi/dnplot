@@ -380,31 +380,7 @@ def waveseries_plotter_dash(model, model1):
             height=850,
             margin=dict(l=0, r=0, t=50, b=50),
         )
-        # nonlocal first_plot
-        # if first_plot:
-        #     fig.update_layout(
-        #         mapbox=dict(
-        #             style="carto-positron",
-        #             zoom=fig.layout.mapbox.zoom if 'zoom' in fig.layout.mapbox else 6,  # Fallback to default zoom
-        #             center=fig.layout.mapbox.center if 'center' in fig.layout.mapbox else dict(lat=0, lon=0),  # Fallback to default center
-        #         ),
-        #         width=850,
-        #         height=850,
-        #         margin=dict(l=0, r=0, t=50, b=50),
-        #     )
-        #     first_plot=False
-        # else:
-        #     fig.update_layout(
-        #         mapbox=dict(
-        #             style="carto-positron",
-        #             center=fig.layout.mapbox.center,
-        #             zoom= fig.layout.mapbox.zoom
-        #         ),
-        #         width=850,
-        #         height=850,
-        #         margin=dict(l=0, r=0, t=50, b=50),
-        #     )
-        #     first_plot=False
+
         if ymodel_all is not None:
             title = f"{xmodel_all.name} and {ymodel_all.name} Waveseries"
         else:
@@ -416,11 +392,11 @@ def waveseries_plotter_dash(model, model1):
     app.run(debug=False, port=port)
 
 
-def waveseries_plotter(model, model1, use_dash: bool):
-    if use_dash:
-        waveseries_plotter_dash(model, model1)
-    else:
+def waveseries_plotter(model, model1, plain: bool):
+    if plain:
         waveseries_plotter_basic(model, model1)
+    else:
+        waveseries_plotter_dash(model, model1)        
 
 
 def create_spectra_app_layout(
