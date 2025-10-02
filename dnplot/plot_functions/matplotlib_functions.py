@@ -245,7 +245,7 @@ def spectra_plotter(fig_dict: dict, model) -> dict:
     return fig_dict
 
 
-def waveseries_plotter(model, model1, var: list[str], separate_plots: bool):
+def waveseries_plotter(model, model1, var: list[str], lon:float, lat:float, separate_plots: bool):
     """var = ['hs', 'tp'] or ['hs',('tp','tm01')]
 
     use 'separate_plots = True' to get separate figures for each parameter.
@@ -256,14 +256,28 @@ def waveseries_plotter(model, model1, var: list[str], separate_plots: bool):
 
     xmodel = sanitation.force_to_ds(model)
     ymodel = sanitation.force_to_ds(model1)
+    
+    if lon is not None and lat is not None:
+        distances = np.sqrt((xmodel["lon"] - lon)**2 + (xmodel["lat"] - lat)**2)
+        nearest_index = distances.argmin().item()
+        xmodel = xmodel.isel(inds=nearest_index)
+        if ymodel is not None:
+            distances = np.sqrt((ymodel["lon"] - lon)**2 + (ymodel["lat"] - lat)**2)
+            nearest_index = distances.argmin().item()
+            ymodel = ymodel.isel(inds=nearest_index)
+    
+        
 
     if separate_plots:
         axes = []
         for i in range(len(var)):
-            __, ax = plt.subplots()
-            axes.append(ax)        
+            fig, ax = plt.subplots()
+            axes.append(ax)
+
+            fig.suptitle(f"lat: {xmodel.lat:.4f}, lon: {xmodel.lon:.4f}")
     else:
-        __, axes = plt.subplots(len(var), 1)
+        fig, axes = plt.subplots(len(var), 1)
+        fig.suptitle(f"lat: {xmodel.lat:.4f}, lon: {xmodel.lon:.4f}")
         axes = axes if len(var) > 1 else [axes]
 
     # Get a list of axes, keeping in mind that we can have twin axes if we give a tuple ('tp','tm01') in vars        
@@ -293,25 +307,25 @@ def waveseries_plotter(model, model1, var: list[str], separate_plots: bool):
     for v, a, c, lgnd in zip(list_of_variables, list_of_axes, list_of_colors, draw_legend):
         ylabel_set = False
         for i, ts in enumerate([xmodel, ymodel]):
-
-            varname = sanitation.get_varname(ts,v)
-            unit = sanitation.get_units(ts,v)
-            
-            if ts.get(v) is not None:
-                a.plot(
-                    ts.get("time"),
-                    ts.get(v),
-                    color=c[i],
-                    label=f"{ts.name} {v} ({unit})",
-                )
-
-                # Set it only once so we get the first color
-                if not ylabel_set:
-                    a.set_ylabel(
-                        f"{varname} ({unit})",
-                        color=c[0],
+            if ts is not None:
+                varname = sanitation.get_varname(ts,v)
+                unit = sanitation.get_units(ts,v)
+                
+                if ts.get(v) is not None:
+                    a.plot(
+                        ts.get("time"),
+                        ts.get(v),
+                        color=c[i],
+                        label=f"{ts.name} {v} ({unit})",
                     )
-                    ylabel_set = True
+
+                    # Set it only once so we get the first color
+                    if not ylabel_set:
+                        a.set_ylabel(
+                            f"{varname} ({unit})",
+                            color=c[0],
+                        )
+                        ylabel_set = True
 
         # If not set, then set withouth data (then missing units etc.)
         if not ylabel_set:

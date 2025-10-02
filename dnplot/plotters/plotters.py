@@ -157,10 +157,18 @@ class Matplotlib:
         self,
         var=["hs", ("tm01", "tm02"), "dirm"],
         plotter: Callable = matplotlib_functions.waveseries_plotter,
+        lon:float = None, 
+        lat:float = None, 
         separate_plots: bool = None, 
         test_mode: bool = False,
     ):
-        fig_dict = plotter(self.data_dict, self.data_dict2, var, separate_plots)
+        """var = ['hs', 'tp'] or ['hs',('tp','tm01')]
+
+        use 'separate_plots = True' to get separate figures for each parameter.
+        Default is separate_plots = True for more than 4 parameters.
+        
+        Use 'lon', 'lat' to pick a point to plot in case the data has many."""
+        fig_dict = plotter(self.data_dict, self.data_dict2, var, lon, lat, separate_plots)
 
     def spectra1d(
         self,

@@ -4,7 +4,8 @@ def force_to_ds(ds):
     """Takes a dict, dnora ModelRun and gets the 'waveseries' object's xr.Dataset.
     If a geo-skeleton is given, then that dataset is returned.
     If a dataset is given, it is returned."""
-
+    if ds is None:
+        return None
     ds = ds.get('waveseries') or ds
     if not isinstance(ds,xr.Dataset):
         ds = ds.ds()
