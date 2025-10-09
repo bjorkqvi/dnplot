@@ -237,9 +237,6 @@ def spectra_plotter(fig_dict: dict, model) -> dict:
         )
         sliders["inds"].on_changed(update_plot)
     update_plot(0)
-    # fig_dict['ax'].set_xlabel(wind.core.x_str)
-    # fig_dict['ax'].set_ylabel(wind.core.y_str)
-    # fig_dict['cbar'].set_label('Wind speed [m/s]')
 
     plt.show(block=True)
 
