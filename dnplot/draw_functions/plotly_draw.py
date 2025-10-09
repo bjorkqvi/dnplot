@@ -43,7 +43,7 @@ def draw_plotly_graph_spectra1d(freq, spec, dirm, spr, name: str, fig = None):
                 ),
                 secondary_y=True,
             )
-    fig.update_yaxes(secondary_y=True, showgrid=False)
+    fig.update_yaxes(secondary_y=True, showgrid=False, range=[0, 360])
     return fig
 
 
@@ -60,9 +60,14 @@ def draw_plotly_graph_spectra(freq, spec, dirs, cmax, cmin):
                 cmin=cmin,
                 cmax=cmax,
                 colorbar=dict(
-                    title="m<sup>2</sup>s",
+                    title={'text': "m<sup>2</sup>s", 'side': 'bottom'},
                     ticks="outside",
-                    len=0.75,
+                    len=0.3,
+                    orientation="h",  # Set the colorbar to be horizontal
+                    y=-0.2,  # Position the colorbar to the left of the plot
+                    x=0.5,   # Center the colorbar vertically
+                    xanchor="center",  # Anchor the colorbar by its right edge
+                    yanchor="top",  # Anchor the colorbar vertically at the center
                 ),
             ),
         )

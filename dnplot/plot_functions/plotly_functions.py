@@ -273,7 +273,7 @@ def spectra_plotter(model, model1):
     spectra = model.spectra()
     spectra1d = model.spectra1d()
 
-    if model1 is not None:
+    if model1:
         spectra_B = model1.spectra()
         spectra1d_B = model1.spectra1d()
     else:
@@ -304,11 +304,11 @@ def spectra_plotter(model, model1):
     times = model[primary_object].time(datetime=False)
     name = model[primary_object].name
 
-    if model1 is not None:
+    if model1:
         lons_B, lats_B = model1[primary_object_B].lonlat()
         name_B = model1[primary_object_B].name
     else:
-        londs_B, lats_B = None, None
+        lons_B, lats_B = None, None
         name_B = None
 
 
@@ -339,7 +339,7 @@ def spectra_plotter(model, model1):
     def display_spectra(time_r, inds_r, inds_B, relayout_data):
         spectra_map = plotly_draw.draw_map(lons, lats, lons_B, lats_B, inds_r, inds_B, relayout_data, name, name_B)
         spectra_map.update_layout(
-            width=800, height=800, margin=dict(l=50, r=0, t=10, b=50)
+            margin=dict(l=50, r=0, t=0, b=0)
         )
 
         graphs = {}
@@ -352,66 +352,106 @@ def spectra_plotter(model, model1):
                 cmin=np.min(spec1),
                 cmax=np.max(spec1),
             )
+
+            time = spectra1d.time(datetime=False)[time_r]
+            lon, lat = spectra1d.lon()[inds_r], spectra1d.lat()[inds_r]
             graphs["spectra"].update_layout(
-                width=800,
-                height=800,
-                margin=dict(l=200, r=0, t=100, b=50),
+                #width=800,
+                #height=800,
+                margin=dict(l=0, r=0, t=50, b=0),
+                title=dict(
+                text=f"{spectra.name}\n{time}; lat={lat:.4f}, lon={lon:.4f}",  # The title text
+                font=dict(size=18),  # Font size for the title
+                x=0.5,  # Center the title horizontally (0 = left, 1 = right)
+                y=1,  # Position the title near the top of the plot
+                xanchor="center",  # Anchor the title horizontally by its center
+                yanchor="top",  # Anchor the title vertically by its top
+                ),
             )
 
+
+        maxdir, mindir = None, None
+        maxdir_B, mindir_B = None, None
         if spectra1d is not None:
             spec1d = spectra1d.spec(squeeze=False)[:, inds_r, :].flatten()
+            dirm = spectra1d.dirm(squeeze=False)[time_r, inds_r, :] if spectra1d.dirm() is not None else None
+            spr = spectra1d.spr(squeeze=False)[time_r, inds_r, :] if spectra1d.spr() is not None else None
             graphs["spectra1d"] = plotly_draw.draw_plotly_graph_spectra1d(
                 freq=spectra1d.freq(),
                 spec=spectra1d.spec(squeeze=False)[time_r, inds_r, :],
-                dirm=(
-                    spectra1d.dirm(squeeze=False)[time_r, inds_r, :]
-                    if spectra1d.dirm() is not None
-                    else None
-                ),
-                spr=(
-                    spectra1d.spr(squeeze=False)[time_r, inds_r, :]
-                    if spectra1d.spr() is not None
-                    else None
-                ),
+                dirm=dirm,
+                spr=spr,
                 name=name,
             )
+            maxdir = dirm
+            mindir = dirm
+            if spr is not None and maxdir is not None:
+                maxdir = maxdir + spr
+                mindir = mindir - spr
+
         if spectra1d_B is not None:
             spec1d = spectra1d_B.spec(squeeze=False)[:, inds_B, :].flatten()
+            dirm_B = spectra1d_B.dirm(squeeze=False)[time_r, inds_r, :] if spectra1d.dirm() is not None else None
+            spr_B = spectra1d_B.spr(squeeze=False)[time_r, inds_r, :] if spectra1d.spr() is not None else None
+            
             graphs["spectra1d"] = plotly_draw.draw_plotly_graph_spectra1d(
                 freq=spectra1d_B.freq(),
                 spec=spectra1d_B.spec(squeeze=False)[time_r, inds_B, :],
-                dirm=(
-                    spectra1d_B.dirm(squeeze=False)[time_r, inds_B, :]
-                    if spectra1d_B.dirm() is not None
-                    else None
-                ),
-                spr=(
-                    spectra1d_B.spr(squeeze=False)[time_r, inds_B, :]
-                    if spectra1d_B.spr() is not None
-                    else None
-                ),
+                dirm=dirm_B,
+                spr=spr_B,
                 name=name_B,
                 fig=graphs["spectra1d"]
             )
+            maxdir_B = dirm_B
+            mindir_B = dirm_B
+            if spr_B is not None and maxdir_B is not None:
+                maxdir_B = maxdir_B + spr_B
+                mindir_B = mindir_B - spr_B
+
+
+
         if spectra1d is not None:
+            if maxdir_B is not None:
+                maxdir = np.ceil(np.maximum(np.nanmax(maxdir), np.nanmax(maxdir_B))/10)*10+10
+            else:
+                maxdir = np.ceil(np.nanmax(maxdir)/10)*10+10
+            
+            if mindir_B is not None:
+                mindir = np.floor(np.minimum(np.nanmin(mindir), np.nanmin(mindir_B))/10)*10-10
+            else:
+                mindir = np.floor(np.nanmin(mindir)/10)*10-10
+
+            time = spectra1d.time(datetime=False)[time_r]
+            lon, lat = spectra1d.lon()[inds_r], spectra1d.lat()[inds_r]
+
             graphs["spectra1d"].update_layout(
-                xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}",
+                title=dict(
+                text=f"{time}; lat={lat:.4f}, lon={lon:.4f}",  # The title text
+                font=dict(size=18),  # Font size for the title
+                x=0.5,  # Center the title horizontally (0 = left, 1 = right)
+                y=1,  # Position the title near the top of the plot
+                xanchor="center",  # Anchor the title horizontally by its center
+                yanchor="top",  # Anchor the title vertically by its top
+                ),
+                xaxis_title=f"{spectra1d.meta.get('freq').get('long_name')}\n (Hz)",
                 yaxis=dict(
-                    title=f"{spectra1d.meta.get('spec').get('long_name')}\n {'E(f)'}",
+                    title=f"{spectra1d.meta.get('spec').get('long_name')}\n E(f) ({spectra1d.meta.get('spec').get('units')})",
                     range=[0, np.max(spec1d) * 1.1],
                 ),
                 yaxis2=dict(
-                    title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('unit')})",
+                    title=f"{spectra1d.meta.get('dirm').get('long_name')}\n ({spectra1d.meta.get('dirm').get('units')})",
                     overlaying="y",
                     side="right",
-                    range=[0, np.max(spectra1d.dirm()) * 1.1],
+                    range=[mindir, maxdir],
                 ),
-                width=800,
-                height=500,
-                margin=dict(l=100, r=0, t=100, b=50),
+                #width=800,
+                #height=500,
+                margin=dict(l=100, r=0, t=50, b=0),
             )
 
         title = f"{times[time_r]} {name}"
+        if name_B is not None:
+            title = f"{title} and {name_B}"
         smaller_title = f"Latitude={lats[inds_r]:.4f} Longitude={lons[inds_r]:.4f}"
 
         if number_of_plots == 1:
