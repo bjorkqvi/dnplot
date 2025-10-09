@@ -1,5 +1,7 @@
 import xarray as xr
 import pandas as pd
+import numpy as np
+
 def force_to_ds(ds):
     """Takes a dict, dnora ModelRun and gets the 'waveseries' object's xr.Dataset.
     If a geo-skeleton is given, then that dataset is returned.
@@ -24,7 +26,7 @@ def get_varname(ds, var: str) -> str:
     )
 
 def xarray_to_dataframe(ds) -> pd.DataFrame:
-   
+    
     df = ds.to_dataframe()
     df = df.reset_index()
     col_drop = ["lon", "lat", "inds"]
@@ -53,3 +55,13 @@ def get_one_point_merged_dataframe(xmodel_all, ymodel_all, inds_x, inds_y):
         df = xdf
 
     return xdf, ydf, df
+
+def cut_ds_to_one_point(ds, lon, lat) -> xr.Dataset:
+    if lon is not None and lat is not None:
+        if ds is not None:
+            distances = np.sqrt((ds["lon"] - lon)**2 + (ds["lat"] - lat)**2)
+            nearest_index = distances.argmin().item()
+            ds = ds.isel(inds=nearest_index)
+
+    return ds
+

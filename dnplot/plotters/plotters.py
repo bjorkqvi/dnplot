@@ -188,11 +188,13 @@ class Matplotlib:
         xvar="hs",
         yvar='hs',
         plotter: Callable = matplotlib_functions.scatter_plotter,
+        lon:float = None, 
+        lat:float = None, 
     ):
         fig, ax = plt.subplots()
         fig_dict = {"fig": fig, "ax": ax}
         data_dict2 = self.data_dict2 or self.data_dict
-        fig_dict = plotter(fig_dict, self.data_dict, data_dict2, xvar, yvar)
+        fig_dict = plotter(fig_dict, self.data_dict, data_dict2, xvar, yvar, lon=lon, lat=lat)
 
 
 

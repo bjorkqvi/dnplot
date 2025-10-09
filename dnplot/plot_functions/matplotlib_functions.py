@@ -258,15 +258,10 @@ def waveseries_plotter(model, model1, var: list[str], lon:float, lat:float, sepa
     xmodel = sanitation.force_to_ds(model)
     ymodel = sanitation.force_to_ds(model1)
     
-    if lon is not None and lat is not None:
-        distances = np.sqrt((xmodel["lon"] - lon)**2 + (xmodel["lat"] - lat)**2)
-        nearest_index = distances.argmin().item()
-        xmodel = xmodel.isel(inds=nearest_index)
-        if ymodel is not None:
-            distances = np.sqrt((ymodel["lon"] - lon)**2 + (ymodel["lat"] - lat)**2)
-            nearest_index = distances.argmin().item()
-            ymodel = ymodel.isel(inds=nearest_index)
     
+    xmodel = sanitation.cut_ds_to_one_point(xmodel, lon, lat)
+    ymodel = sanitation.cut_ds_to_one_point(ymodel, lon, lat)
+  
         
 
     if separate_plots:
@@ -418,33 +413,13 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
     return fig_dict
 
 
-def scatter_plotter(fig_dict: dict, model, var):
-    ts = model["waveseries"]
-    x = var[0]
-    y = var[1]
-    title = rf"$\bf{{{ts.name}}}$" + "\n" + rf"{x} vs {y}"
-    fig_dict["ax"].set_title(title, fontsize=14)
-    fig_dict["ax"].scatter(
-        ts.get(x), ts.get(y), c="blue", alpha=0.6, edgecolors="w", s=100
-    )
-    fig_dict["ax"].set_xlabel(
-        f"{ts.meta.get(x)['long_name']}\n ({ts.meta.get(x)['units']})"
-    )
-    fig_dict["ax"].set_ylabel(
-        f"{ts.meta.get(y)['long_name']}\n ({ts.meta.get(y)['units']})"
-    )
-    fig_dict["ax"].grid(linestyle="--")
-    plt.show(block=True)
-
-
-
-
-def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str):
+def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str, lon:float, lat: float):
     """Plots a scatter plot of data from two different objects"""
     
-  
     xmodel = sanitation.force_to_ds(model)
     ymodel = sanitation.force_to_ds(model1)
+    xmodel = sanitation.cut_ds_to_one_point(xmodel, lon, lat)
+    ymodel = sanitation.cut_ds_to_one_point(ymodel, lon, lat)
     xunit = sanitation.get_units(xmodel,xvar)
     yunit = sanitation.get_units(ymodel,yvar)
     xvarname = sanitation.get_varname(xmodel,xvar)
