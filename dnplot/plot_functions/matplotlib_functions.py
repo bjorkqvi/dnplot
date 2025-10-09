@@ -45,8 +45,8 @@ def topo_plotter(fig_dict: dict, data_dict: dict, coastline: bool = None) -> dic
         cmap=default_variable["topo"]["cmap"],
         contour=contour,
     )
-
-    fig_dict = draw.draw_mask(fig_dict, grid, mask_to_plot="land")
+    if grid.is_gridded():
+        fig_dict = draw.draw_mask(fig_dict, grid, mask_to_plot="land")
 
     if coastline is None and not contour:
         # This has been gicen by the draw_gridded_magnitude

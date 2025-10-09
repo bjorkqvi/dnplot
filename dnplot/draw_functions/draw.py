@@ -41,13 +41,17 @@ def draw_gridded_magnitude(
     gridded_data = data.shape == (len(y), len(x))
 
     if not gridded_data and have_levels or contour:
-        xx, yy = np.meshgrid(x, y)
+        if x.shape == data.shape:
+            xx, yy = x, y
+        else:
+            xx, yy = np.meshgrid(x, y)
+
         tri = mtri.Triangulation(xx.ravel(), yy.ravel())
         cont = ax.tricontourf(tri, data.ravel(), cmap=cmap, levels=levels)
         fig_dict["want_coastline"] = True
     else:
         cont = ax.pcolor(x, y, data, cmap=cmap, label=label)
-        fig_dict["want_constaline"] = False
+        fig_dict["want_coastline"] = False
 
     cbar = fig_dict.get("cbar") or fig.colorbar(cont)
 
