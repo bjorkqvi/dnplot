@@ -2,8 +2,11 @@ from dnplot import Matplotlib
 from geo_skeletons import GriddedSkeleton, PointSkeleton
 from geo_skeletons.decorators import add_datavar, add_mask, add_magnitude, add_time
 import geo_parameters as gp
+from geo_skeletons.classes import Wave
+import numpy as np
+import pytest
 
-
+HIDE_PLOTS = True
 def test_plot_topo():
     @add_mask(
         name="sea",
@@ -26,7 +29,7 @@ def test_plot_topo():
     topo[5, :] = 5
     grid.set_topo(topo)
     plot = Matplotlib({"grid": grid})
-    plot.topo()
+    plot.topo(test_mode=HIDE_PLOTS)
 
 
 def test_plot_grid():
@@ -60,7 +63,7 @@ def test_plot_grid():
         }
     )
 
-    plot.grid()
+    plot.grid(test_mode=HIDE_PLOTS)
 
 
 def test_plot_wind():
@@ -85,7 +88,7 @@ def test_plot_wind():
         }
     )
 
-    plot.wind(test_mode=True)
+    plot.wind(test_mode=HIDE_PLOTS)
 
 
 def test_plot_current():
@@ -112,4 +115,58 @@ def test_plot_current():
         }
     )
 
-    plot.current(test_mode=True)
+    plot.current(test_mode=HIDE_PLOTS)
+
+
+def test_plot_waveseries():
+    data = Wave.add_time()(
+        lon=(0, 1), lat=(0, 0), time=("2020-01-01 00:00", "2020-02-01 23:00"), name="Buoy"
+    )
+    data.set_hs(np.random.rand(len(data.time()), 2) * 10)
+    data.set_tm01(np.random.rand(len(data.time()), 2) * 10)
+    data.set_tm02(np.random.rand(len(data.time()), 2) * 10)
+    data.set_tp(np.random.rand(len(data.time()), 2) * 10)
+    data.set_dirp(np.random.rand(len(data.time()), 2) * 10)
+
+    data2 = Wave.add_time()(
+        lon=(0.5, 0.6),
+        lat=(0, 0),
+        time=("2020-01-01 00:00", "2020-02-01 23:00"),
+        name="Model",
+    )
+    data2.set_hs(data.hs() + np.random.randn(len(data.time()), 2) * 2)
+    data2.set_tp(data.hs() + np.random.randn(len(data.time()), 2) * 2)
+
+
+    plot = Matplotlib(data, data2)
+    with pytest.raises(ValueError):
+        plot.waveseries(test_mode=HIDE_PLOTS)
+    plot.waveseries(lon=0, lat=0, test_mode=HIDE_PLOTS)
+
+
+def test_plot_scatter():
+    data = Wave.add_time()(
+        lon=(0, 1), lat=(0, 0), time=("2020-01-01 00:00", "2020-02-01 23:00"), name="Buoy"
+    )
+    data.set_hs(np.random.rand(len(data.time()), 2) * 10)
+    data.set_tm01(np.random.rand(len(data.time()), 2) * 10)
+    data.set_tm02(np.random.rand(len(data.time()), 2) * 10)
+    data.set_tp(np.random.rand(len(data.time()), 2) * 10)
+    data.set_dirp(np.random.rand(len(data.time()), 2) * 10)
+
+    data2 = Wave.add_time()(
+        lon=(0.5, 0.6),
+        lat=(0, 0),
+        time=("2020-01-01 00:00", "2020-02-01 23:00"),
+        name="Model",
+    )
+    data2.set_hs(data.hs() + np.random.randn(len(data.time()), 2) * 2)
+    data2.set_tp(data.hs() + np.random.randn(len(data.time()), 2) * 2)
+
+
+    plot = Matplotlib(data, data2)
+    with pytest.raises(ValueError):
+        plot.scatter(xvar="hs", yvar="tp", test_mode=HIDE_PLOTS)
+    plot.scatter(xvar="hs", yvar="tp", test_mode=HIDE_PLOTS, lon=0, lat=0)
+
+
