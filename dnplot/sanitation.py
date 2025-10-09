@@ -64,7 +64,7 @@ def cut_ds_to_one_point(ds, lon, lat) -> xr.Dataset:
         nearest_index = distances.argmin().item()
         ds = ds.isel(inds=nearest_index)
 
-    if len(ds.lon) > 1 or len(ds.lat) > 1:
+    if ds.lon.size > 1 or ds.lat.size > 1:
         raise ValueError(f"Please provide data with only one point, or give the specification for a point with keywords 'lon=..., lat=...'. Now lon={ds.lon.values}, lat={ds.lat.values}.")    
 
     return ds
