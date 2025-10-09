@@ -57,11 +57,15 @@ def get_one_point_merged_dataframe(xmodel_all, ymodel_all, inds_x, inds_y):
     return xdf, ydf, df
 
 def cut_ds_to_one_point(ds, lon, lat) -> xr.Dataset:
+    if ds is None:
+        return ds
     if lon is not None and lat is not None:
-        if ds is not None:
-            distances = np.sqrt((ds["lon"] - lon)**2 + (ds["lat"] - lat)**2)
-            nearest_index = distances.argmin().item()
-            ds = ds.isel(inds=nearest_index)
+        distances = np.sqrt((ds["lon"] - lon)**2 + (ds["lat"] - lat)**2)
+        nearest_index = distances.argmin().item()
+        ds = ds.isel(inds=nearest_index)
+
+    if len(ds.lon) > 1 or len(ds.lat) > 1:
+        raise ValueError(f"Please provide data with only one point, or give the specification for a point with keywords 'lon=..., lat=...'. Now lon={ds.lon.values}, lat={ds.lat.values}.")    
 
     return ds
 
