@@ -339,7 +339,7 @@ def spectra_plotter(model, model1):
     def display_spectra(time_r, inds_r, inds_B, relayout_data):
         spectra_map = plotly_draw.draw_map(lons, lats, lons_B, lats_B, inds_r, inds_B, relayout_data, name, name_B)
         spectra_map.update_layout(
-            margin=dict(l=50, r=0, t=0, b=0)
+            margin=dict(l=50, r=50, t=0, b=0)
         )
 
         graphs = {}
@@ -446,7 +446,7 @@ def spectra_plotter(model, model1):
                 ),
                 #width=800,
                 #height=500,
-                margin=dict(l=100, r=0, t=50, b=0),
+                margin=dict(l=0, r=0, t=50, b=0),
             )
 
         title = f"{times[time_r]} {name}"
