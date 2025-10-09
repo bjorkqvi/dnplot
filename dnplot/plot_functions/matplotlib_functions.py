@@ -342,8 +342,7 @@ def waveseries_plotter(model, model1, var: list[str], lon:float, lat:float, sepa
 
 
     plt.tight_layout()
-    plt.show()
-
+    return {'fig': fig, 'ax': axes}
 
 def spectra1d_plotter(fig_dict: dict, model) -> dict:
     def update_plot(val):
@@ -498,4 +497,5 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str, lon:float
     )
     fig_dict["ax"].grid(linestyle="--")
     fig_dict["ax"].legend(loc="upper left")
-    plt.show(block=True)
+
+    return fig_dict
