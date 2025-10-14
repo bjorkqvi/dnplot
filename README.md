@@ -32,6 +32,10 @@ plot.waveseries(var=['hs', ('tp','tm01'), 'dirp'])
 plot.wavegrid('hs')
 ```
 
+<img width="924" height="754" alt="Screenshot from 2025-10-14 14-09-08" src="https://github.com/user-attachments/assets/4bddfb55-9cf2-43e0-9a50-8b9431fa5991" />
+<img width="997" height="786" alt="Screenshot from 2025-10-14 12-49-05" src="https://github.com/user-attachments/assets/1fc94da7-4345-4208-b63b-f20f8b198087" />
+
+
 To interactively compare spectra from a model with several locations with buoy measurements:
 
 ```python
