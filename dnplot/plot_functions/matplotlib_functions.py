@@ -8,10 +8,11 @@ import cmocean.cm
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
-from dnplot import sanitation 
+from dnplot import sanitation
 from dnplot.stats import calculate_RMSE, calculate_correlation
 from dnplot.defaults import default_variable, DEFAULT_VARIABLE_DATA
 from dnplot.draw_functions import draw
+
 
 def grid_plotter(fig_dict: dict, data_dict: dict, coastline: bool = None) -> dict:
     """Plot the depth information and land mask. Also plots information about e.g. wind data and spectral points"""
@@ -243,23 +244,22 @@ def spectra_plotter(fig_dict: dict, model) -> dict:
     return fig_dict
 
 
-def waveseries_plotter(model, model1, var: list[str], lon:float, lat:float, separate_plots: bool):
+def waveseries_plotter(
+    model, model1, var: list[str], lon: float, lat: float, separate_plots: bool
+):
     """var = ['hs', 'tp'] or ['hs',('tp','tm01')]
 
     use 'separate_plots = True' to get separate figures for each parameter.
     Default is separate_plots = True for more than 4 parameters."""
-    
+
     if separate_plots is None:
         separate_plots = len(var) > 4
 
     xmodel = sanitation.force_to_ds(model)
     ymodel = sanitation.force_to_ds(model1)
-    
-    
+
     xmodel = sanitation.cut_ds_to_one_point(xmodel, lon, lat)
     ymodel = sanitation.cut_ds_to_one_point(ymodel, lon, lat)
-  
-        
 
     if separate_plots:
         axes = []
@@ -267,13 +267,17 @@ def waveseries_plotter(model, model1, var: list[str], lon:float, lat:float, sepa
             fig, ax = plt.subplots()
             axes.append(ax)
 
-            fig.suptitle(f"lat: {xmodel.lat:.4f}, lon: {xmodel.lon:.4f}")
+            fig.suptitle(
+                f"lat: {np.atleast_1d(xmodel.lat)[0]:.4f}, lon: {np.atleast_1d(xmodel.lon)[0]:.4f}"
+            )
     else:
         fig, axes = plt.subplots(len(var), 1)
-        fig.suptitle(f"lat: {xmodel.lat:.4f}, lon: {xmodel.lon:.4f}")
+        fig.suptitle(
+            f"lat: {np.atleast_1d(xmodel.lat)[0]:.4f}, lon: {np.atleast_1d(xmodel.lon)[0]:.4f}"
+        )
         axes = axes if len(var) > 1 else [axes]
 
-    # Get a list of axes, keeping in mind that we can have twin axes if we give a tuple ('tp','tm01') in vars        
+    # Get a list of axes, keeping in mind that we can have twin axes if we give a tuple ('tp','tm01') in vars
     list_of_axes = []
     list_of_variables = []
     list_of_colors = []
@@ -282,32 +286,35 @@ def waveseries_plotter(model, model1, var: list[str], lon:float, lat:float, sepa
         list_of_axes.append(axe)
         if isinstance(var[i], tuple) or isinstance(var[i], list):
             list_of_axes.append(axe.twinx())
-            if len(var[i])>2:
-                raise ValueError(f"Can give a maximum of 2 parameters to plot in same plot! ({var[i]})")
+            if len(var[i]) > 2:
+                raise ValueError(
+                    f"Can give a maximum of 2 parameters to plot in same plot! ({var[i]})"
+                )
             list_of_variables.append(var[i][0])
             list_of_variables.append(var[i][1])
-            list_of_colors.append(('b','r'))
-            list_of_colors.append(('g','m'))
+            list_of_colors.append(("b", "r"))
+            list_of_colors.append(("g", "m"))
             draw_legend.append(False)
             draw_legend.append(True)
         else:
             list_of_variables.append(var[i])
-            list_of_colors.append(('b','r'))
+            list_of_colors.append(("b", "r"))
             draw_legend.append(True)
 
-
     lines, labels = [], []
-    for v, a, c, lgnd in zip(list_of_variables, list_of_axes, list_of_colors, draw_legend):
+    for v, a, c, lgnd in zip(
+        list_of_variables, list_of_axes, list_of_colors, draw_legend
+    ):
         ylabel_set = False
         for i, ts in enumerate([xmodel, ymodel]):
             if ts is not None:
-                varname = sanitation.get_varname(ts,v)
-                unit = sanitation.get_units(ts,v)
-                
+                varname = sanitation.get_varname(ts, v)
+                unit = sanitation.get_units(ts, v)
+
                 if ts.get(v) is not None:
                     a.plot(
                         ts.get("time"),
-                        ts.get(v),
+                        ts.get(v).squeeze(),
                         color=c[i],
                         label=f"{ts.name} {v} ({unit})",
                     )
@@ -327,7 +334,7 @@ def waveseries_plotter(model, model1, var: list[str], lon:float, lat:float, sepa
                 color=c[0],
             )
         a.grid(True)
-        
+
         # This is to handle twin axes correctly
         li, la = a.get_legend_handles_labels()
         lines += li
@@ -335,11 +342,10 @@ def waveseries_plotter(model, model1, var: list[str], lon:float, lat:float, sepa
         if lgnd:
             a.legend(lines, labels)
             lines, labels = [], []
-        
-
 
     plt.tight_layout()
-    return {'fig': fig, 'ax': axes}
+    return {"fig": fig, "ax": axes}
+
 
 def spectra1d_plotter(fig_dict: dict, model) -> dict:
     def update_plot(val):
@@ -409,17 +415,19 @@ def spectra1d_plotter(fig_dict: dict, model) -> dict:
     return fig_dict
 
 
-def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str, lon:float, lat: float):
+def scatter_plotter(
+    fig_dict: dict, model, model1, xvar: str, yvar: str, lon: float, lat: float
+):
     """Plots a scatter plot of data from two different objects"""
-    
+
     xmodel = sanitation.force_to_ds(model)
     ymodel = sanitation.force_to_ds(model1)
     xmodel = sanitation.cut_ds_to_one_point(xmodel, lon, lat)
     ymodel = sanitation.cut_ds_to_one_point(ymodel, lon, lat)
-    xunit = sanitation.get_units(xmodel,xvar)
-    yunit = sanitation.get_units(ymodel,yvar)
-    xvarname = sanitation.get_varname(xmodel,xvar)
-    yvarname = sanitation.get_varname(ymodel,yvar)
+    xunit = sanitation.get_units(xmodel, xvar)
+    yunit = sanitation.get_units(ymodel, yvar)
+    xvarname = sanitation.get_varname(xmodel, xvar)
+    yvarname = sanitation.get_varname(ymodel, yvar)
     xdf = sanitation.xarray_to_dataframe(xmodel)
     ydf = sanitation.xarray_to_dataframe(ymodel)
 
@@ -432,9 +440,9 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str, lon:float
     xdata, ydata = xdf[xvar], ydf[yvar]
 
     # Statistics
-    RMSE = np.sqrt(np.mean((xdata-ydata)**2))
-    R = np.corrcoef(xdata, ydata)[0,1]
-    SI = RMSE / np.mean(xdata)*100
+    RMSE = np.sqrt(np.mean((xdata - ydata) ** 2))
+    R = np.corrcoef(xdata, ydata)[0, 1]
+    SI = RMSE / np.mean(xdata) * 100
     # Text on the figure
     text = [f"N={len(xdf)}"]
     if xunit == yunit:
@@ -442,7 +450,7 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str, lon:float
         text.append(f"RMSE={RMSE:.2f}{xunit}")
         text.append(f"SI={SI:.0f}%")
     text.append(f"r={R:.2f}")
-    text = '\n'.join(text)
+    text = "\n".join(text)
 
     # color for scatter density
     xy = np.vstack([xdata, ydata])
@@ -452,29 +460,37 @@ def scatter_plotter(fig_dict: dict, model, model1, xvar:str, yvar:str, lon:float
 
     title = f"{xmodel.name} ({xvar}) vs {ymodel.name} ({yvar})"
     fig_dict["ax"].set_title(title, fontsize=14)
-    cont = fig_dict["ax"].scatter(xdata, ydata, c=z, cmap=cmap,  norm=norm,s=50)
-    
+    cont = fig_dict["ax"].scatter(xdata, ydata, c=z, cmap=cmap, norm=norm, s=50)
+
     maxval = np.maximum(np.max(xdata), np.max(ydata))
     fig_dict["ax"].set_xlim([0, maxval])
     fig_dict["ax"].set_ylim([0, maxval])
 
-    slope, intercept = np.polyfit(xdata, ydata,1)
+    slope, intercept = np.polyfit(xdata, ydata, 1)
     x_range = np.linspace(0, np.ceil(np.max(xdata)), 100)
-    fig_dict["ax"].plot(x_range, x_range, linewidth=1, color='k',linestyle='--',label="x=y")
-
-    sign = '+' if intercept >=0 else '-'
     fig_dict["ax"].plot(
-        x_range, slope*x_range+intercept, color="r", linewidth=2, label=f"Regression line y={slope:.2f}x{sign}{np.abs(intercept):.2f}"
+        x_range, x_range, linewidth=1, color="k", linestyle="--", label="x=y"
     )
-    slope_1p = np.mean(ydata)/np.mean(xdata)
-    fig_dict["ax"].plot(x_range, x_range*slope_1p, linewidth=2, color = 'k',label=f"One parameter line y={slope_1p:.2f}x ")
 
-    fig_dict["ax"].set_xlabel(
-        f"{xmodel.name} {xvarname}\n ({xunit})"
+    sign = "+" if intercept >= 0 else "-"
+    fig_dict["ax"].plot(
+        x_range,
+        slope * x_range + intercept,
+        color="r",
+        linewidth=2,
+        label=f"Regression line y={slope:.2f}x{sign}{np.abs(intercept):.2f}",
     )
-    fig_dict["ax"].set_ylabel(
-        f"{ymodel.name} {yvarname}\n ({yunit})"
+    slope_1p = np.mean(ydata) / np.mean(xdata)
+    fig_dict["ax"].plot(
+        x_range,
+        x_range * slope_1p,
+        linewidth=2,
+        color="k",
+        label=f"One parameter line y={slope_1p:.2f}x ",
     )
+
+    fig_dict["ax"].set_xlabel(f"{xmodel.name} {xvarname}\n ({xunit})")
+    fig_dict["ax"].set_ylabel(f"{ymodel.name} {yvarname}\n ({yunit})")
 
     # color bar
     cbar = plt.colorbar(cont, ax=fig_dict["ax"])
