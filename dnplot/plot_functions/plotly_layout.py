@@ -2,7 +2,7 @@ from dash import Dash, dcc, html
 import xarray as xr
 from dnplot import sanitation
 def create_spectra_app_layout(
-    len_of_inds: int, len_of_inds_B: int, len_of_times: int, number_of_plots: int, name:str, name_B: str
+    len_of_inds: int, len_of_inds_B: int, len_of_times: int, number_of_1d_plots: int, number_of_2d_plots: int, name:str, name_B: str
 ):
 
 
@@ -13,8 +13,11 @@ def create_spectra_app_layout(
         slider_label = 'Inactive'
         slider_len = 0
 
-    if number_of_plots not in [1,2]:
-        raise ValueError("'number_of_plots' must be 1 or 2, not {number_of_plots}!")
+    if number_of_2d_plots not in [0, 1,2]:
+        raise ValueError("'number_of_2d_plots' must be 0, 1 or 2, not {number_of_plots}!")
+
+    if number_of_1d_plots not in [0,1]:
+        raise ValueError("'number_of_1d_plots' must be 0 or 1, not {number_of_1d_plots}!")
 
     return html.Div(
         [
@@ -59,23 +62,13 @@ def create_spectra_app_layout(
             html.Div(
                 [
                     html.Div(
-                        dcc.Graph(id="primary_graph"),
+                        dcc.Graph(id="1d_graph"),
                         style={
                             "flex-grow": "1",
                             #"width": "30%" if number_of_plots == 2 else "50%",  # Set width for each graph container
                             "display": "inline-block",
                         },
-                    ),
-                    html.Div(
-                        dcc.Graph(id="secondary_graph"),
-                        style={
-                            "flex-grow": "1",
-                            #"width": "40%" if number_of_plots == 2 else "50%",  # Set width for each graph container
-                            "display": "inline-block",
-                        },
-                    )
-                    if number_of_plots == 2
-                    else None,  # Only include secondary_graph if number_of_plots == 2
+                    ) if number_of_1d_plots == 1 else None,
                     html.Div(
                         dcc.Graph(id="spectra_map"),
                         style={
@@ -84,6 +77,34 @@ def create_spectra_app_layout(
                             "display": "inline-block",
                         },
                     ),
+                ],
+                style={
+                    "display": "flex",  # Arrange graphs in a single row
+                    "flexDirection": "row",  # Horizontal layout
+                    "width": "100%",  # Ensure the container spans the full width
+                },
+            ),
+                        html.Div(
+                [
+                    html.Div(
+                        dcc.Graph(id="2d_graph1"),
+                        style={
+                            "flex-grow": "1",
+                            #"width": "30%" if number_of_plots == 2 else "50%",  # Set width for each graph container
+                            "display": "inline-block",
+                        },
+                    ) if number_of_2d_plots > 0 else None,
+                    html.Div(
+                        dcc.Graph(id="2d_graph2"),
+                        style={
+                            "flex-grow": "1",
+                            #"width": "40%" if number_of_plots == 2 else "50%",  # Set width for each graph container
+                            "display": "inline-block",
+                        },
+                    )
+                    if number_of_2d_plots > 1
+                    else None,  # Only include secondary_graph if number_of_plots == 2
+                    
                 ],
                 style={
                     "display": "flex",  # Arrange graphs in a single row
