@@ -13,7 +13,7 @@ Ready to dive in? You can easily install **dnplot** using pip:
 $ pip install dnplot 
 ```
 
-## Example
+## Examples
 
 To quickly visualize the wave data outputted by SWAN to a netcdf file:
 
@@ -31,6 +31,24 @@ plot = dnplot.Matplotlib({'wavegrid': data, 'waveseries': point})
 plot.waveseries(var=['hs', ('tp','tm01'), 'dirp']) 
 plot.wavegrid('hs')
 ```
+
+To interactively compare spectra from a model with several locations with buoy measurements:
+
+```python
+import dnora as dn
+import dnplot
+
+model = dn.modelrun.ModelRun(year=2020)
+model.import_spectra(filename="nora3.nc", name="NORA3")
+model.spectra_to_1d()
+
+buoy = dn.modelrun.ModelRun(year=2020, month=2, day=5)
+buoy.import_spectra1d(filename="spec_E39_D_1h.nc", name="Breisundet")
+
+plot = dnplot.Plotly(buoy, model)
+plot.spectra()
+```
+<img width="3377" height="1299" alt="Screenshot from 2025-10-14 12-34-48" src="https://github.com/user-attachments/assets/88fcddd5-52da-4d90-851e-b1ce7d6a127c" />
 
 ## Docs 📚
 Looking for more details? Our documentation (currently under development) provides information about the package, its features, and how to use it. Explore it [here](https://dnora.readthedocs.io/en/latest/index.html).
