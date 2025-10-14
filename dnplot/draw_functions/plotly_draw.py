@@ -1,16 +1,24 @@
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-def draw_plotly_graph_spectra1d(freq, spec, dirm, spr, name: str, fig = None):
+
+
+def draw_plotly_graph_spectra1d(freq, spec, dirm, spr, name: str, fig=None):
     if fig is None:
         fig = make_subplots(specs=[[{"secondary_y": True}]])
-        color1 = 'black'
-        color2 = 'blue'
+        color1 = "black"
+        color2 = "blue"
     else:
-        color1 = 'red'
-        color2 = 'magenta'
+        color1 = "red"
+        color2 = "magenta"
     fig.add_trace(
-        go.Scatter(x=freq, y=spec, mode="lines", name=f"{name} Spec (m<sup>2</sup>s)", line = dict(color=color1)),
+        go.Scatter(
+            x=freq,
+            y=spec,
+            mode="lines",
+            name=f"{name} Spec (m<sup>2</sup>s)",
+            line=dict(color=color1),
+        ),
         secondary_y=False,
     )
     if dirm is not None:
@@ -18,9 +26,9 @@ def draw_plotly_graph_spectra1d(freq, spec, dirm, spr, name: str, fig = None):
             go.Scatter(
                 x=freq,
                 y=dirm,
-                name=f"{name} dirm (deg)",
+                name=f"{name} dirm (deg to)",
                 mode="lines",
-                line=dict(color=color2, dash='dash'),
+                line=dict(color=color2, dash="dash"),
             ),
             secondary_y=True,
         )
@@ -60,12 +68,12 @@ def draw_plotly_graph_spectra(freq, spec, dirs, cmax, cmin):
                 cmin=cmin,
                 cmax=cmax,
                 colorbar=dict(
-                    title={'text': "m<sup>2</sup>s", 'side': 'bottom'},
+                    title={"text": "m<sup>2</sup>s", "side": "bottom"},
                     ticks="outside",
                     len=0.3,
                     orientation="h",  # Set the colorbar to be horizontal
                     y=-0.2,  # Position the colorbar to the left of the plot
-                    x=0.5,   # Center the colorbar vertically
+                    x=0.5,  # Center the colorbar vertically
                     xanchor="center",  # Anchor the colorbar by its right edge
                     yanchor="top",  # Anchor the colorbar vertically at the center
                 ),
@@ -86,40 +94,51 @@ def draw_plotly_graph_spectra(freq, spec, dirs, cmax, cmin):
     return fig
 
 
-def draw_map(lons: dict[str, np.ndarray], lats: dict[str, np.ndarray], ind_a: int, ind_b:int, relayout_data, names: dict[str, str]):
+def draw_map(
+    lons: dict[str, np.ndarray],
+    lats: dict[str, np.ndarray],
+    ind_a: int,
+    ind_b: int,
+    relayout_data,
+    names: dict[str, str],
+):
     """Create a map with point plotted on top with activated point highlighted"""
-    fig = go.Figure( )
-    fig.add_trace(go.Scattermapbox(
-        lat=lats.get('a'),
-        lon=lons.get('a'),
-        mode="markers",
-        marker=dict(
-            size=18,
-            color=[
-                "blue" if i == ind_a else "darkblue"
-                for i in range(len(lats.get('a')))
-            ]
-        ),
-        name=names.get('a')
-    ))
-    if lats.get('b') is not None:
-        fig.add_trace(go.Scattermapbox(
-            lat=lats.get('b'),
-            lon=lons.get('b'),
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scattermapbox(
+            lat=lats.get("a"),
+            lon=lons.get("a"),
             mode="markers",
             marker=dict(
-                size=10,
+                size=18,
                 color=[
-                    "red" if i == ind_b else "darkred"
-                    for i in range(len(lats.get('b')))
-                ]
+                    "blue" if i == ind_a else "darkblue"
+                    for i in range(len(lats.get("a")))
+                ],
             ),
-            name=names.get('b')
-        ))
+            name=names.get("a"),
+        )
+    )
+    if lats.get("b") is not None:
+        fig.add_trace(
+            go.Scattermapbox(
+                lat=lats.get("b"),
+                lon=lons.get("b"),
+                mode="markers",
+                marker=dict(
+                    size=10,
+                    color=[
+                        "red" if i == ind_b else "darkred"
+                        for i in range(len(lats.get("b")))
+                    ],
+                ),
+                name=names.get("b"),
+            )
+        )
 
     # Default values for zoom and center
     zoom = 5
-    center = dict(lat=np.mean(lats.get('a')), lon=np.mean(lons.get('a')))
+    center = dict(lat=np.mean(lats.get("a")), lon=np.mean(lons.get("a")))
 
     # Extract zoom and center from relayoutData if available
     if relayout_data:

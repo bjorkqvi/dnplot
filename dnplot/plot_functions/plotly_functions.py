@@ -335,9 +335,11 @@ def spectra_plotter(model, model1):
         number_of_1d_plots += 1
 
     if spectra.get("a"):
+        spectra.get("a").set_convention("ocean")
         number_of_2d_plots += 1
 
     if spectra.get("b"):
+        spectra.get("b").set_convention("ocean")
         number_of_2d_plots += 1
 
     if spectra.get("a"):
@@ -445,7 +447,7 @@ def spectra_plotter(model, model1):
                 spec1d = spec.spec(squeeze=False)[:, inds.get(key), :].flatten()
                 max_ef = np.maximum(max_ef, np.max(spec1d))
                 dirm = (
-                    spec.dirm(squeeze=False)[ind_time, inds.get(key), :]
+                    spec.dirm(dir_type="to", squeeze=False)[ind_time, inds.get(key), :]
                     if spec.dirm() is not None
                     else None
                 )
@@ -503,10 +505,10 @@ def spectra_plotter(model, model1):
                 range=[0, max_ef * 1.1],
             ),
             yaxis2=dict(
-                title=f"Mean wave direction\n (deg)",
+                title=f"Mean wave direction\n (deg to)",
                 overlaying="y",
                 side="right",
-                # range=[mindir, maxdir],
+                range=[mindir, maxdir],
             ),
             # width=800,
             # height=500,
