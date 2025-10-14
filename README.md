@@ -29,7 +29,7 @@ plot = dnplot.Matplotlib({'wavegrid': data, 'waveseries': point})
 
 # default value for var=["hs", ("tm01", "tm02"), "dirm"] 
 plot.waveseries(var=['hs', ('tp','tm01'), 'dirp']) 
-plot.wavegrid('hs')
+plot.wavegrid('hs', contour=False)
 ```
 
 <img width="924" height="754" alt="Screenshot from 2025-10-14 14-09-08" src="https://github.com/user-attachments/assets/4bddfb55-9cf2-43e0-9a50-8b9431fa5991" />
