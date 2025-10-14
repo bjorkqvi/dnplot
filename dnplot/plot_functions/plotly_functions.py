@@ -99,41 +99,41 @@ def waveseries_plotter_dash(model, model1):
             subfig.add_trace(fig2.data[0])
             subfig.data[-1].showlegend = True
 
-        if names.get("b") is None:
-            subfig.update_layout(
-                xaxis_title="UTC",
-                yaxis_title=var1,
-                title=f"{names.get('a')} (lat: {lats.get('a')[ind_a]:.3f}, lon: {lons.get('a')[ind_a]:.3f})",
-            )
+        # Remove name from var, 'hs NORA3' -> 'hs'
+        title_var1 = var1.split(" ")[0]
+        title_var2 = var2.split(" ")[0]
+
+        if hasattr(xmodel_all[title_var1], "units"):
+            unit1 = f" ({xmodel_all[title_var1].units})"
         else:
-            title_var1 = var1.split(" ")[0]
-            title_var2 = var2.split(" ")[0]
-            if hasattr(xmodel_all[title_var1], "units"):
-                unit1 = f" ({xmodel_all[title_var1].units})"
-            else:
-                unit1 = ""
+            unit1 = ""
 
-            if title_var2 == "None":
-                title_var2 = ""
-            if title_var2 and hasattr(ymodel_all[title_var2], "units"):
-                unit2 = f" ({ymodel_all[title_var2].units})"
-            else:
-                unit2 = ""
+        if title_var2 == "None":
+            title_var2 = ""
 
-            if title_var1 == title_var2 or not title_var2:
-                title_var = f"{title_var1}{unit1}"
-            else:
-                title_var = f"{title_var1}{unit1} / {title_var2}{unit2}"
+        if names.get("b") is None:
+            model = xmodel_all
+        else:
+            model = ymodel_all
 
-            if var2 != "None":
-                fig2.data[0].showlegend = True
-            subfig.update_layout(
-                xaxis_title="UTC",
-                yaxis_title=title_var,
-                title=f"{names.get('a')} (lat: {lats.get('a')[ind_a]:.3f}, lon: {lons.get('a')[ind_a]:.3f}); {names.get('b')} (lat: {lats.get('b')[ind_b]:.3f}, lon: {lons.get('b')[ind_b]:.3f})",
-                margin=dict(l=0, r=0, t=50, b=50),
-            )
+        if title_var2 and hasattr(model[title_var2], "units"):
+            unit2 = f" ({model[title_var2].units})"
+        else:
+            unit2 = ""
+
+        if title_var1 == title_var2 or not title_var2:
+            title_var = f"{title_var1}{unit1}"
+        else:
+            title_var = f"{title_var1}{unit1} / {title_var2}{unit2}"
+
+        title_str = f"{names.get('a')} (lat: {lats.get('a')[ind_a]:.3f}, lon: {lons.get('a')[ind_a]:.3f})"
+        if names.get("b") is not None:
+            title_str += f"; {names.get('b')} (lat: {lats.get('b')[ind_b]:.3f}, lon: {lons.get('b')[ind_b]:.3f})"
+
         subfig.update_layout(
+            xaxis_title="UTC",
+            yaxis_title=title_var,
+            title=title_str,
             margin=dict(l=0, r=0, t=50, b=50),
             showlegend=True,
             legend=dict(
@@ -146,7 +146,7 @@ def waveseries_plotter_dash(model, model1):
         )
 
         fig = plotly_draw.draw_map(lons, lats, ind_a, ind_b, relayout_data, names)
-        if ymodel_all is not None:
+        if names.get("b") is not None:
             title = f"{names.get('a')} and {names.get('b')} Waveseries"
         else:
             title = f"{names.get('a')} Waveseries"
