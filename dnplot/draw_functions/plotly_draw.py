@@ -86,40 +86,40 @@ def draw_plotly_graph_spectra(freq, spec, dirs, cmax, cmin):
     return fig
 
 
-def draw_map(xlon:np.ndarray, xlat:np.ndarray, ylon: np.ndarray, ylat: np.ndarray, inds_x: int, inds_y:int, relayout_data, xname:str, yname:str):
+def draw_map(lons: dict[str, np.ndarray], lats: dict[str, np.ndarray], ind_a: int, ind_b:int, relayout_data, names: dict[str, str]):
     """Create a map with point plotted on top with activated point highlighted"""
     fig = go.Figure( )
     fig.add_trace(go.Scattermapbox(
-        lat=xlat,
-        lon=xlon,
+        lat=lats.get('a'),
+        lon=lons.get('a'),
         mode="markers",
         marker=dict(
-            size=12,
+            size=18,
             color=[
-                "blue" if i == inds_x else "darkblue"
-                for i in range(len(xlat))
+                "blue" if i == ind_a else "darkblue"
+                for i in range(len(lats.get('a')))
             ]
         ),
-        name=xname
+        name=names.get('a')
     ))
-    if ylat is not None:
+    if lats.get('b') is not None:
         fig.add_trace(go.Scattermapbox(
-            lat=ylat,
-            lon=ylon,
+            lat=lats.get('b'),
+            lon=lons.get('b'),
             mode="markers",
             marker=dict(
-                size=12,
+                size=10,
                 color=[
-                    "red" if i == inds_y else "darkred"
-                    for i in range(len(ylat))
+                    "red" if i == ind_b else "darkred"
+                    for i in range(len(lats.get('b')))
                 ]
             ),
-            name=yname
+            name=names.get('b')
         ))
 
     # Default values for zoom and center
     zoom = 5
-    center = dict(lat=np.mean(xlat), lon=np.mean(xlon))
+    center = dict(lat=np.mean(lats.get('a')), lon=np.mean(lons.get('a')))
 
     # Extract zoom and center from relayoutData if available
     if relayout_data:
@@ -134,7 +134,7 @@ def draw_map(xlon:np.ndarray, xlat:np.ndarray, ylon: np.ndarray, ylat: np.ndarra
         ),
         width=850,
         height=850,
-        margin=dict(l=0, r=0, t=50, b=50),
+        margin=dict(l=100, r=100, t=50, b=100),
     )
 
     return fig
