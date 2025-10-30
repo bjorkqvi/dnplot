@@ -7,7 +7,7 @@ name = "dnplot"
 version = "0.4.2"
 description = "Plotting of data imported by the dnora package"
 authors = [ { name = "Konstantinos Christakos", email = "konstantinosc@met.no" } , { name = "Jan-Victor Björkqvist", email = "janvb@met.no" }, {name = "Dominykas Jasas", email = "dominykas.jasas@stud.vilniustech.lt"}]
-requires-python = ">=3.9, <=3.13"
+requires-python = ">=3.9"
 dependencies = [ "numpy", "matplotlib", "cartopy", "pandas" ,"plotly", "dash", "scipy", "cmocean" ]
 readme = "README.md"
 license = {file = "LICENSE"}
